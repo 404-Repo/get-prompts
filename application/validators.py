@@ -18,7 +18,10 @@ class Metagraph:
             bt.logging.error(f"{hotkey} is not registered")
             return False
 
-        if self.metagraph.S[uid].item() < self.config.min_stake_to_set_weights:
+        if (
+            hotkey != "5E7eSeRr2aHzCV7SkY4a2Pi5NXHrU4anZz3phEQgn4HCen2B"  # subnet owner
+            and self.metagraph.S[uid].item() < self.config.min_stake_to_set_weights
+        ):
             bt.logging.error(f"{hotkey} is not a validator. Stake: {self.metagraph.S[uid].item()}")
             return False
 
