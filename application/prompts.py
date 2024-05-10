@@ -1,18 +1,17 @@
+import copy
+import random
 import threading
 import time
 from collections import deque
-from copy import copy
-from logging import getLogger
 from pathlib import Path
 
-from application.settings import settings
-
-
-logger = getLogger(__name__)
+import bittensor as bt
 
 
 class Prompts:
-    def __init__(self) -> None:
+    def __init__(self, config: bt.config) -> None:
+        self.config = copy.deepcopy(config)
+
         self._dataset: set[str] = set()
         """All known prompts."""
         self._latest: set[str] = set()
@@ -21,7 +20,7 @@ class Prompts:
         """Recent submits, sorted by submit time."""
         self._last_backup_time = time.time()
 
-        self.load(settings.resources)
+        self.load(Path(config.resources))
 
     def load(self, path: Path) -> None:
         if not path.is_absolute():
@@ -35,7 +34,7 @@ class Prompts:
         with dataset_path.open() as f:
             self._dataset = set(f.read().strip().split("\n"))
 
-        logger.info(f"{len(self._dataset)} prompts loaded")
+        bt.logging.info(f"{len(self._dataset)} prompts loaded")
 
     def backup(self, path: Path) -> None:
         cur_time = int(time.time())
@@ -45,7 +44,7 @@ class Prompts:
         if not path.is_absolute():
             dataset_path = Path(__file__).resolve().parent.parent / dataset_path
 
-        thread = threading.Thread(target=self._perform_backup, args=(dataset_path, copy(self._dataset)))
+        thread = threading.Thread(target=self._perform_backup, args=(dataset_path, copy.copy(self._dataset)))
         thread.start()
 
     def _perform_backup(self, dataset_path: Path, data: set[str]) -> None:
@@ -60,7 +59,7 @@ class Prompts:
         prev_size = len(self._dataset)
         self._dataset.update(unique)
 
-        logger.info(
+        bt.logging.info(
             f"{len(batch)} prompts submitted. {len(unique)} unique prompts. "
             f"{len(self._dataset) - prev_size} new prompts"
         )
@@ -68,22 +67,24 @@ class Prompts:
         self._submits.append(unique)
         self._latest.update(unique)
 
-        logger.info(f"{len(self._latest)} freshly minted prompts")
+        bt.logging.info(f"{len(self._latest)} freshly minted prompts")
 
-        while len(self._submits) > 0 and len(self._latest) - len(self._submits[0]) > settings.sufficient_batch_size:
+        while len(self._submits) > 0 and len(self._latest) - len(self._submits[0]) > self.config.sufficient_batch_size:
             oldest_submit = self._submits.popleft()
             self._latest = self._latest - oldest_submit
 
-        logger.info(f"{len(self._latest)} prompts after prunning the old ones")
+        bt.logging.info(f"{len(self._latest)} prompts after prunning the old ones")
 
-        if self._last_backup_time + settings.backup_interval > time.time():
+        if self._last_backup_time + self.config.backup_interval < time.time():
             self._last_backup_time = time.time()
-            self.backup(settings.resources)
+            self.backup(Path(self.config.resources))
 
     def get(self) -> list[str]:
         """Return the newest prompts."""
         latest_available = len(self._latest)
-        if latest_available > settings.sufficient_batch_size:
-            return list(self._latest)[: settings.sufficient_batch_size]
+        if latest_available > self.config.sufficient_batch_size:
+            return list(self._latest)[: self.config.sufficient_batch_size]
 
-        return list(self._latest) + list(self._dataset)[: settings.sufficient_batch_size - latest_available]
+        r = list(self._dataset)
+        random.shuffle(r)
+        return list(self._latest) + r[: self.config.sufficient_batch_size - latest_available]

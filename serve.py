@@ -1,34 +1,65 @@
+import typing
+
+import uvicorn
+from application.config import config
 from application.prompts import Prompts
-from application.settings import settings
-from fastapi import Depends, FastAPI, HTTPException, Security
-from fastapi.security import APIKeyHeader
+from application.utils import verify_api_key
+from application.validators import Metagraph
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 from starlette.responses import Response
-from starlette.status import HTTP_200_OK, HTTP_403_FORBIDDEN
+from starlette.status import HTTP_200_OK
 
 
 app = FastAPI()
-prompts = Prompts()
+app.state.config = None
+app.state.prompts = None
+app.state.metagraph = None
 
-api_key_header = APIKeyHeader(name="X-Api-Key", auto_error=False)
+
+@app.on_event("startup")
+def startup_event() -> None:
+    app.state.config = config
+    app.state.prompts = Prompts(config)
+    app.state.metagraph = Metagraph(config)
+
+
+def get_prompts_manager() -> Prompts:
+    return typing.cast(Prompts, app.state.prompts)
+
+
+def get_metagraph() -> Metagraph:
+    return typing.cast(Metagraph, app.state.metagraph)
 
 
 class Batch(BaseModel):
     prompts: list[str]
 
 
-def verify_api_key(x_api_key: str = Security(api_key_header)) -> str:
-    if x_api_key != settings.api_key:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Invalid API Key")
-    return x_api_key
-
-
 @app.post("/submit", status_code=HTTP_200_OK, response_class=Response)
-async def submit_strings(batch: Batch, api_key: str = Depends(verify_api_key)) -> Response:
+async def submit_strings(
+    batch: Batch, prompts: Prompts = Depends(get_prompts_manager), api_key: str = Depends(verify_api_key)  # noqa: B008
+) -> Response:
     prompts.submit(batch.prompts)
     return Response()
 
 
+class RequestModel(BaseModel):
+    hotkey: str
+    nonce: int
+    signature: str
+
+
 @app.get("/get", response_model=Batch)
-async def get_strings(hotkey: str, prompts_after: int, signature: str) -> Batch:
+async def get_strings(
+    request: RequestModel,
+    prompts: Prompts = Depends(get_prompts_manager),  # noqa: B008
+    metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
+) -> Batch:
+    if not metagraph.verify_signature(request.hotkey, request.nonce, request.signature):
+        raise HTTPException(status_code=403, detail="Invalid signature provided.")
     return Batch(prompts=prompts.get())
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=config.port)  # noqa: S104
