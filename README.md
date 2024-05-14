@@ -16,6 +16,8 @@ The packages to run this implementation on a PC can be installed as follows:
 ```commandline
 bash env_install.sh
 conda activate three-gen-prompt-receiver
+pnpm setup
+pnpm install pm2
 ```
 The script will create a conda environment with all packages being installed within it.
 The script will also create **receiver.config.js** file that can be used for running the 
@@ -24,6 +26,11 @@ server as a separate process.
 You can uninstall conda environment and delete generated files using the following script:
 ```commandline
 bash env_uninstall.sh
+```
+
+You can also install project using provided **pyproject.toml** file:
+```commandline
+python install -e .
 ```
 
 ### Running server
