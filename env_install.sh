@@ -9,6 +9,10 @@ if [ -z "$(which conda)" ]; then
     exit 1
 fi
 
+# Attempt to find Conda's base directory and source it (required for `conda activate`)
+CONDA_BASE=$(conda info --base)
+source "${CONDA_BASE}/etc/profile.d/conda.sh"
+
 # Store the path of the Conda interpreter
 CONDA_INTERPRETER_PATH=$(which python)
 
