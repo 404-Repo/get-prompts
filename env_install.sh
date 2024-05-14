@@ -28,12 +28,9 @@ module.exports = {
 };
 EOF
 
-echo -e "\n\n[INFO] receiver.config.js generated for PM2."
+echo -e "[INFO] receiver.config.js was generated for PM2."
+echo -e "[INFO] Start initialization of the conda environment."
 
 conda env create -f environment.yml
 conda activate three-gen-prompt-receiver
 conda info --env
-
-conda install pnpm
-pnpm install pm2 -g
-pnpm fund
