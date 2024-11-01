@@ -22,11 +22,9 @@ class Prompts:
         """Recent submits, sorted by submit time."""
         self._last_backup_time = time.time()
         
-        # Buffer for collecting prompts before DB upload
         self._prompt_buffer: dict[str, list[str]] = defaultdict(list)
         """Buffer to collect prompts before uploading to DB"""
         
-        # Initialize DB handler
         self._db = PromptsDB(config)
 
         self.load(Path(config.resources))
@@ -34,7 +32,6 @@ class Prompts:
     def upload_backups_to_db(self) -> None:
         """Read all backup files and upload prompts to the database."""
         try:
-            # Get all backup files
             backup_path = Path(self.config.resources)
             if not backup_path.is_absolute():
                 backup_path = Path(__file__).parent.parent / backup_path
