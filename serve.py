@@ -5,7 +5,7 @@ from application.config import config
 from application.prompts import Prompts
 from application.utils import verify_api_key
 from application.validators import Metagraph
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from starlette.responses import Response
 from starlette.status import HTTP_200_OK
@@ -38,9 +38,13 @@ class Batch(BaseModel):
 
 @app.post("/submit", status_code=HTTP_200_OK, response_class=Response)
 async def submit_strings(
-    batch: Batch, prompts: Prompts = Depends(get_prompts_manager), api_key: str = Depends(verify_api_key)  # noqa: B008
+    batch: Batch, 
+    request: Request,
+    prompts: Prompts = Depends(get_prompts_manager), 
+    api_key: str = Depends(verify_api_key)  # noqa: B008
 ) -> Response:
-    prompts.submit(batch.prompts)
+    client_ip = request.headers.get("X-POD-ID")
+    prompts.submit(batch.prompts, client_ip)
     return Response()
 
 
