@@ -29,6 +29,38 @@ def read_config() -> bt.config:
         help="Minimal required stake to set weights.",
         default=1,
     )
+    
+    # GCP PostgreSQL settings
+    parser.add_argument(
+        "--pg_host",
+        type=str,
+        help="PostgreSQL host",
+        required=True
+    )
+    parser.add_argument(
+        "--pg_port",
+        type=int,
+        help="PostgreSQL port",
+        default=5432
+    )
+    parser.add_argument(
+        "--pg_database",
+        type=str,
+        help="PostgreSQL database name",
+        required=True
+    )
+    parser.add_argument(
+        "--pg_user",
+        type=str,
+        help="PostgreSQL user",
+        required=True
+    )
+    parser.add_argument(
+        "--pg_password",
+        type=str,
+        help="PostgreSQL password",
+        required=True
+    )
 
     return bt.config(parser)
 

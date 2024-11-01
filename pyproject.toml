@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 bittensor = "6.9.3"
 python-dotenv = "1.0.1"
+psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
 poetry = { version = "1.8.2" }
