@@ -8,7 +8,7 @@ from psycopg2.extensions import connection as psycopg2_conn
 from psycopg2.extras import execute_values
 
 
-class PromptsDB:
+class PromptsDPromptsDBB:
     """Database handler for prompts storage."""
 
     def __init__(self, config: bt.config) -> None:
@@ -80,7 +80,7 @@ class PromptsDB:
                     execute_values(
                         cur,
                         """
-                        INSERT INTO prompts (prompt, validation_status, generator_id)
+                        INSERT INTO \"prompts\".\"generated_prompts\" (prompt, validation_status, generator_id)
                         VALUES %s
                         ON CONFLICT (prompt, generator_id) DO NOTHING
                         """,
@@ -94,29 +94,28 @@ class PromptsDB:
             bt.logging.error(f"Failed to upload prompts to database: {str(e)}")
             raise
 
-    def upload_from_files(self, file_paths: List[str], generator_id: str) -> None:
+    def upload_from_files(self, file_paths: List[str]) -> None:
         """Upload prompts from multiple files to the database.
 
         Args:
             file_paths: List of paths to files containing prompts
-            generator_id: IP address of the prompt generator
         """
         try:
             total_uploaded = 0
             with self._get_connection() as conn:
                 for file_path in file_paths:
                     with Path(file_path).open(encoding='utf-8') as f:
-                        prompts = [line.strip("\n") for line in f if line.strip()]
+                        prompts = [line.rstrip("\n") for line in f]
 
                     with conn.cursor() as cur:
                         execute_values(
                             cur,
                             """
-                            INSERT INTO prompts (prompt, validation_status, generator_id)
+                            INSERT INTO \"prompts\".\"generated_prompts\" (prompt, validation_status, generator_id)
                             VALUES %s
                             ON CONFLICT (prompt, generator_id) DO NOTHING
                             """,
-                            [(prompt, "wait", generator_id) for prompt in prompts],
+                            [(prompt, "wait", "") for prompt in prompts],
                         )
                         total_uploaded += len(prompts)
                     conn.commit()
@@ -127,7 +126,7 @@ class PromptsDB:
             bt.logging.error(f"Failed to upload files to database: {str(e)}")
             raise
 
-    def update_validation_status(self, prompt_id: int, status: str) -> None:
+    def update_validation_status(self, prompt: str, status: str) -> None:
         """Update the validation status of a prompt.
 
         Args:
@@ -142,15 +141,15 @@ class PromptsDB:
                 with conn.cursor() as cur:
                     cur.execute(
                         """
-                        UPDATE prompts 
+                        UPDATE \"prompts\".\"generated_prompts\" 
                         SET validation_status = %s, last_updated = CURRENT_TIMESTAMP
-                        WHERE id = %s
+                        WHERE prompt = %s
                         """,
-                        (status, prompt_id)
+                        (status, prompt)
                     )
                 conn.commit()
 
-            bt.logging.info(f"Successfully updated validation status to {status} for prompt {prompt_id}")
+            bt.logging.info(f"Successfully updated validation status to {status} for prompt {prompt}")
 
         except Exception as e:
             bt.logging.error(f"Failed to update validation status: {str(e)}")
