@@ -2,7 +2,7 @@ import base64
 import copy
 
 import bittensor as bt
-from substrateinterface import Keypair
+from bittensor_wallet import Keypair
 
 
 class Metagraph:
