@@ -42,4 +42,4 @@ repos:
     rev: 1.7.8  # Use the latest stable version
     hooks:
     -   id: bandit
-        args: [".", "-rq", "-c", "pyproject.toml", "-f", "junit", "-o", "bandit-report.xml"]
+        args: ["-rq", "-c", "pyproject.toml", "-f", "yaml", "-o", ".reports/bandit-report.yaml"]

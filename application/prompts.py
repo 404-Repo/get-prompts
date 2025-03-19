@@ -16,7 +16,7 @@ class Prompts:
         """All known prompts."""
         self._latest: set[str] = set()
         """Fresh batch of prompts to share with validators."""
-        self._submits: deque[set] = deque()
+        self._submits: deque[set[str]] = deque()
         """Recent submits, sorted by submit time."""
         self._last_backup_time = time.time()
 
