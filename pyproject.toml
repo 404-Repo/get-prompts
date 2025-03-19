@@ -6,7 +6,7 @@ authors = ["Maxim Bladyko <bladyko@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = ">=3.12,<3.13"
 bittensor = "9.0.1"
 python-dotenv = "1.0.1"
 
@@ -18,6 +18,7 @@ bandit = "1.8.3"
 black = "25.1.0"
 mypy = "1.15.0"
 types-requests = "2.32.0.*"
+pre-commit = "^4.0.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -106,9 +107,6 @@ module = [
     # place modules to skip here
 ]
 ignore_errors = true
-
-[tool.poe]
-poetry_command = ""
 
 [tool.poe.tasks.run-check]
 help = "Run tests and try fix format"
