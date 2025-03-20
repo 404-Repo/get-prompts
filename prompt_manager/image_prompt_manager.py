@@ -2,7 +2,7 @@ import random as rd
 from datetime import datetime
 from pathlib import Path
 
-from utils.compressor import ZstandardCompressor
+from utils.archive_manager import ZstandardManager
 
 from prompt_manager.base_prompt_manager import BasePromptManager
 from prompt_manager.schemas.prompt_batch import ImagePromptBatch
@@ -24,7 +24,8 @@ class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
         self._temp_dir.mkdir(parents=True, exist_ok=True)
 
     async def submit(self, *, batch: ImagePromptBatch) -> None:
-        raise NotImplementedError()
+        await ZstandardManager.decompress(archive_path=batch.archive_path, output_dir=self._submitted_image_dir)
+        batch.archive_path.unlink()
 
     async def get(self) -> ImagePromptBatch:
         # todo Check that file is actually image in webp format
@@ -32,10 +33,13 @@ class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
         files = [f for f in self._default_image_dir.iterdir()]
         files.extend([f for f in self._submitted_image_dir.iterdir()])
         batch_files = rd.sample(files, self._batch_size)
-        timestamp = datetime.now().timestamp()
-        archive_path = self._temp_dir / f"{timestamp}.zst"
-        await ZstandardCompressor.compress(files=batch_files, archive_path=archive_path)
+        archive_path = self.get_archive_path()
+        await ZstandardManager.compress(files=batch_files, archive_path=archive_path)
         return ImagePromptBatch(archive_path=archive_path)
+
+    def get_archive_path(self) -> Path:
+        timestamp = datetime.now().timestamp()
+        return self._temp_dir / f"{timestamp}.zst"
 
 
 # todo Get from config
