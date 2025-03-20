@@ -24,6 +24,7 @@ class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
         self._temp_dir.mkdir(parents=True, exist_ok=True)
 
     async def submit(self, *, batch: ImagePromptBatch) -> None:
+        # todo Check format of the uploaded images?
         await ZstandardManager.decompress(archive_path=batch.archive_path, output_dir=self._submitted_image_dir)
         batch.archive_path.unlink()
 
