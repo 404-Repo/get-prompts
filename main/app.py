@@ -1,4 +1,6 @@
-import typing
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Any, cast
 
 import uvicorn
 from application.config import config
@@ -17,19 +19,20 @@ app.state.prompts = None
 app.state.metagraph = None
 
 
-@app.on_event("startup")
-def startup_event() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     app.state.config = config
     app.state.prompts = Prompts(config)
     app.state.metagraph = Metagraph(config)
+    yield
 
 
 def get_prompts_manager() -> Prompts:
-    return typing.cast(Prompts, app.state.prompts)
+    return cast(Prompts, app.state.prompts)
 
 
 def get_metagraph() -> Metagraph:
-    return typing.cast(Metagraph, app.state.metagraph)
+    return cast(Metagraph, app.state.metagraph)
 
 
 class Batch(BaseModel):
