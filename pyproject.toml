@@ -9,6 +9,7 @@ readme = "README.md"
 python = ">=3.12,<3.13"
 bittensor = "9.0.1"
 python-dotenv = "1.0.1"
+pillow = "11.1.0"
 
 [tool.poetry.group.dev.dependencies]
 poetry = { version = "2.1.1" }
@@ -80,7 +81,7 @@ combine-as-imports = true
 lines-after-imports = 2
 
 [tool.bandit]
-skips = ["B104"]
+skips = ["B104", "B311"]
 exclude_dirs = [
     "./.*/**",
     "./tests/**",

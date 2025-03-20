@@ -22,3 +22,5 @@ package.json
 pnpm*
 receiver.config.js
 node_modules
+
+resources/images/submitted
