@@ -10,23 +10,30 @@ class ImageGenerator:
     _HEIGHT: int = 512
 
     @staticmethod
-    def generate(output_dir: str, image_cnt: int) -> None:
-        Path(output_dir).mkdir(parents=True)
+    def generate(*, output_dir: str, image_cnt: int) -> None:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         for i in range(image_cnt):
-            # Create a blank image
-            img = Image.new("RGB", (ImageGenerator._WIDTH, ImageGenerator._HEIGHT), "white")
+            try:
+                salt = random.randint(0, 200000)
+                img_path = Path(output_dir) / f"{i}_{salt}.webp"
 
-            # Add random background noise to simulate real images
-            img = ImageGenerator._add_noise(img)
+                # Create a blank image
+                img = Image.new("RGB", (ImageGenerator._WIDTH, ImageGenerator._HEIGHT), "white")
 
-            # Draw multiple random shapes
-            ImageGenerator._draw_random_shapes(img)
+                # Add random background noise to simulate real images
+                img = ImageGenerator._add_noise(img)
 
-            # Apply slight blur to add realism
-            img = img.filter(ImageFilter.GaussianBlur(radius=random.uniform(0, 2)))  # noqa: S311
+                # Draw multiple random shapes
+                ImageGenerator._draw_random_shapes(img)
 
-            # Save as high-quality WebP
-            img.save(Path(output_dir) / f"{i}.webp", "WEBP", quality=98)
+                # Apply slight blur to add realism
+                img = img.filter(ImageFilter.GaussianBlur(radius=random.uniform(0, 2)))  # noqa: S311
+
+                # Save as Webp
+                img.save(img_path, "WEBP", quality=100)
+                print(f"Generated image at {img_path}")
+            except Exception as e:
+                print(f"Exception during generation of file {img_path}: {e}")
 
         print(f"✅ Successfully generated {image_cnt} heavy WebP images in '{output_dir}'")
 
@@ -78,3 +85,6 @@ class ImageGenerator:
 
             # Blend the overlay with the main image
             image.paste(overlay, (0, 0), overlay)
+
+
+ImageGenerator.generate(output_dir="resources/images/default", image_cnt=80000)

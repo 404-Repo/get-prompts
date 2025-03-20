@@ -14,9 +14,9 @@ class BasePromptManager(ABC, Generic[BatchT]):
         self._resource_dir: Path = resources_dir
 
     @abstractmethod
-    def submit(self, *, batch: BatchT) -> None:
+    async def submit(self, *, batch: BatchT) -> None:
         pass
 
     @abstractmethod
-    def get(self) -> BatchT:
+    async def get(self) -> BatchT:
         pass

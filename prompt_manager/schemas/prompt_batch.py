@@ -12,4 +12,4 @@ class TextPromptBatch(BasePromptBatch):
 
 
 class ImagePromptBatch(BasePromptBatch):
-    images_zip_path: Path
+    archive_path: Path

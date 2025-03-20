@@ -10,6 +10,9 @@ python = ">=3.12,<3.13"
 bittensor = "9.0.1"
 python-dotenv = "1.0.1"
 pillow = "11.1.0"
+zstandard = "^0.23.0"
+aiofiles = "^24.1.0"
+types-aiofiles = "^24.1.0.20241221"
 
 [tool.poetry.group.dev.dependencies]
 poetry = { version = "2.1.1" }
@@ -20,6 +23,7 @@ black = "25.1.0"
 mypy = "1.15.0"
 types-requests = "2.32.0.*"
 pre-commit = "^4.0.1"
+types-aiofiles = "^24.1.0.20241221"
 
 [build-system]
 requires = ["poetry-core"]
@@ -48,6 +52,7 @@ namespace-packages = ["sources"]
 fix = true
 output-format = "full"
 include = ["*.py"]
+ignore = ["S311"]
 
 [tool.ruff.lint]
 select = [

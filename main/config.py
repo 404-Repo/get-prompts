@@ -34,4 +34,3 @@ def read_config() -> bt.config:
 
 
 config = read_config()
-print(config)

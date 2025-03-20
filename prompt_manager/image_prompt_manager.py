@@ -1,5 +1,8 @@
-from abc import abstractmethod
+import random as rd
+from datetime import datetime
 from pathlib import Path
+
+from utils.compressor import ZstandardCompressor
 
 from prompt_manager.base_prompt_manager import BasePromptManager
 from prompt_manager.schemas.prompt_batch import ImagePromptBatch
@@ -8,16 +11,32 @@ from prompt_manager.schemas.prompt_batch import ImagePromptBatch
 class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
     _DEFAULT_IMAGE_DIR: str = "default"
     _SUBMITTED_IMAGE_DIR: str = "submitted"
+    _TEMP_DIR: str = "temp"
 
     def __init__(self, *, resources_dir: Path, batch_size: int) -> None:
+        # todo Check that default directory exists and has at least batch_size elements.
+        # todo Add common exception handler.
         super().__init__(resources_dir=resources_dir, batch_size=batch_size)
         self._default_image_dir = self._resource_dir / self._DEFAULT_IMAGE_DIR
         self._submitted_image_dir = self._resource_dir / self._SUBMITTED_IMAGE_DIR
         self._submitted_image_dir.mkdir(parents=True, exist_ok=True)
+        self._temp_dir = self._resource_dir / self._TEMP_DIR
+        self._temp_dir.mkdir(parents=True, exist_ok=True)
 
-    def submit(self, *, batch: ImagePromptBatch) -> None:
-        pass
+    async def submit(self, *, batch: ImagePromptBatch) -> None:
+        raise NotImplementedError()
 
-    @abstractmethod
-    def get(self) -> ImagePromptBatch:
-        pass
+    async def get(self) -> ImagePromptBatch:
+        # todo Check that file is actually image in webp format
+        # todo Check that files are bigger than batch size
+        files = [f for f in self._default_image_dir.iterdir()]
+        files.extend([f for f in self._submitted_image_dir.iterdir()])
+        batch_files = rd.sample(files, self._batch_size)
+        timestamp = datetime.now().timestamp()
+        archive_path = self._temp_dir / f"{timestamp}.zst"
+        await ZstandardCompressor.compress(files=batch_files, archive_path=archive_path)
+        return ImagePromptBatch(archive_path=archive_path)
+
+
+# todo Get from config
+image_prompt_manager = ImagePromptManager(resources_dir=Path("resources/images"), batch_size=2500)

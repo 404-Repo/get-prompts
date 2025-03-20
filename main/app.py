@@ -1,33 +1,28 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, cast
+from typing import Any
 
 import uvicorn
-from application.config import config
 from application.validators import Metagraph
+from config import config
 from fastapi import Depends, FastAPI
+from prompt_manager.image_prompt_endpoints import image_prompt_router
 from prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
 from prompt_manager.text_prompt_manager import text_prompt_manager
-from pydantic import BaseModel
 from starlette.responses import Response
 from starlette.status import HTTP_200_OK
 
+from main.dependencies import get_metagraph
+from main.schemas.metagraph_data import MetagraphData
+
 
 app = FastAPI()
-app.state.config = None
-app.state.prompts = None
-app.state.metagraph = None
+app.include_router(image_prompt_router, prefix="/images")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
-    app.state.config = config
-    app.state.metagraph = Metagraph(config)
     yield
-
-
-def get_metagraph() -> Metagraph:
-    return cast(Metagraph, app.state.metagraph)
 
 
 @app.post("/submit", status_code=HTTP_200_OK, response_class=Response)
@@ -38,15 +33,9 @@ async def submit_strings(
     return Response()
 
 
-class RequestModel(BaseModel):
-    hotkey: str
-    nonce: int
-    signature: str
-
-
 @app.post("/get", response_model=TextPromptBatch)
 async def get_strings(
-    request: RequestModel,
+    request: MetagraphData,
     metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
 ) -> BasePromptBatch:
     # if not metagraph.verify_signature(request.hotkey, request.nonce, request.signature):
