@@ -19,7 +19,13 @@ from main.exceptions import BaseException, InvalidApiKeyException, InvalidSignat
 from main.schemas.metagraph_data import MetagraphData
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
+    print(config)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(image_prompt_router, prefix="/images")
 app.include_router(text_prompt_router, prefix="/texts")
 
@@ -34,12 +40,6 @@ async def custom_exception_handler(request: Request, exc: BaseException) -> JSON
         )
 
     return JSONResponse(status_code=500, content={"error": "Unhandled Exception", "message": str(exc)})
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
-    print(config)
-    yield
 
 
 # todo: remove because deprecated
