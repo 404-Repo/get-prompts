@@ -6,6 +6,7 @@ from collections import deque
 from pathlib import Path
 
 import bittensor as bt
+from main.config import config
 
 from prompt_manager.base_prompt_manager import BasePromptManager
 from prompt_manager.schemas.prompt_batch import TextPromptBatch
@@ -26,7 +27,7 @@ class TextPromptManager(BasePromptManager[TextPromptBatch]):
         self._backup_interval: int = backup_interval
         self._load_default_prompts(self._resource_dir / self._DEFAULT_PROMPTS_FILENAME)
 
-    def submit(self, *, batch: TextPromptBatch) -> None:
+    def submit(self, *, batch: TextPromptBatch) -> None:  # type: ignore
         """Add new prompts to the dataset."""
 
         unique = set(batch.prompts)
@@ -53,7 +54,7 @@ class TextPromptManager(BasePromptManager[TextPromptBatch]):
             self._last_backup_time = time.time()
             self._backup()
 
-    def get(self) -> TextPromptBatch:
+    def get(self) -> TextPromptBatch:  # type: ignore
         """Return the newest prompts."""
         latest_available = len(self._latest)
         if latest_available > self._batch_size:
@@ -86,8 +87,8 @@ class TextPromptManager(BasePromptManager[TextPromptBatch]):
 
 
 text_prompt_manager = TextPromptManager(
-    resources_dir=Path("resources"),
-    batch_size=100,
-    backup_interval=5,
+    resources_dir=Path(config.text_resource_dir),
+    batch_size=config.text_prompt_batch_size,
+    backup_interval=config.backup_interval,
 )
 # todo check resources path

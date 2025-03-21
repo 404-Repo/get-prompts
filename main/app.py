@@ -3,17 +3,13 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
-from application.validators import Metagraph
 from config import config
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from prompt_manager.image_prompt_endpoints import image_prompt_router
 from prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
 from prompt_manager.text_prompt_manager import text_prompt_manager
 from starlette.responses import Response
 from starlette.status import HTTP_200_OK
-
-from main.dependencies import get_metagraph
-from main.schemas.metagraph_data import MetagraphData
 
 
 app = FastAPI()
@@ -33,10 +29,10 @@ async def submit_strings(
     return Response()
 
 
-@app.post("/get", response_model=TextPromptBatch)
+@app.get("/get", response_model=TextPromptBatch)
 async def get_strings(
-    request: MetagraphData,
-    metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
+    # request: MetagraphData,
+    # metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
 ) -> BasePromptBatch:
     # if not metagraph.verify_signature(request.hotkey, request.nonce, request.signature):
     #     raise HTTPException(status_code=403, detail="Invalid signature provided.")

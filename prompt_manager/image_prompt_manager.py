@@ -2,6 +2,7 @@ import random as rd
 from datetime import datetime
 from pathlib import Path
 
+from main.config import config
 from utils.archive_manager import ZstandardManager
 
 from prompt_manager.base_prompt_manager import BasePromptManager
@@ -16,6 +17,7 @@ class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
     def __init__(self, *, resources_dir: Path, batch_size: int) -> None:
         # todo Check that default directory exists and has at least batch_size elements.
         # todo Add common exception handler.
+        # todo Cleanup cron job for the temp files in case of usual clean up failure.
         super().__init__(resources_dir=resources_dir, batch_size=batch_size)
         self._default_image_dir = self._resource_dir / self._DEFAULT_IMAGE_DIR
         self._submitted_image_dir = self._resource_dir / self._SUBMITTED_IMAGE_DIR
@@ -43,5 +45,6 @@ class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
         return self._temp_dir / f"{timestamp}.zst"
 
 
-# todo Get from config
-image_prompt_manager = ImagePromptManager(resources_dir=Path("resources/images"), batch_size=2500)
+image_prompt_manager = ImagePromptManager(
+    resources_dir=Path(config.image_resource_dir), batch_size=config.image_prompt_batch_size
+)

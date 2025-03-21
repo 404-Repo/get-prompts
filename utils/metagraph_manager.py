@@ -5,7 +5,7 @@ import bittensor as bt
 from bittensor_wallet import Keypair
 
 
-class Metagraph:
+class MetagraphManager:
     def __init__(self, config: bt.config) -> None:
         self.config = copy.deepcopy(config)
         self.subtensor = bt.subtensor(config=self.config)
