@@ -6,7 +6,7 @@ from starlette.status import HTTP_403_FORBIDDEN
 from main.config import config
 
 
-metagraph: Metagraph | None = None
+metagraph = Metagraph(config)
 api_key_header = APIKeyHeader(name="X-Api-Key", auto_error=False)
 
 
