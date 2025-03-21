@@ -6,7 +6,7 @@ from pathlib import Path
 from zstandard import ZstdCompressor, ZstdDecompressor
 
 
-class ArchiveManagerBase(ABC):
+class BaseArchiveManager(ABC):
 
     @staticmethod
     @abstractmethod
@@ -19,18 +19,21 @@ class ArchiveManagerBase(ABC):
         pass
 
 
-class ZstandardManager(ArchiveManagerBase):
+class ZstandardManagerArchiveManager(BaseArchiveManager):
     _COMPRESSION_LEVEL: int = 9
 
     @staticmethod
     async def compress(*, files: list[Path], archive_path: Path) -> None:
         await asyncio.to_thread(
-            ZstandardManager._compress_files, files, archive_path, ZstandardManager._COMPRESSION_LEVEL
+            ZstandardManagerArchiveManager._compress_files,
+            files,
+            archive_path,
+            ZstandardManagerArchiveManager._COMPRESSION_LEVEL,
         )
 
     @staticmethod
     async def decompress(*, archive_path: Path, output_dir: Path) -> None:
-        await asyncio.to_thread(ZstandardManager._decompress_files, archive_path, output_dir)
+        await asyncio.to_thread(ZstandardManagerArchiveManager._decompress_files, archive_path, output_dir)
 
     @staticmethod
     def _decompress_files(archive_path: Path, output_dir: Path) -> None:

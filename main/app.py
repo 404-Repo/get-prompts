@@ -15,7 +15,7 @@ from starlette.status import HTTP_200_OK
 from utils.metagraph_manager import MetagraphManager
 
 from main.dependencies import get_metagraph_manager, verify_api_key
-from main.exceptions import ExceptionBase, InvalidApiKeyException, InvalidSignatureException
+from main.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException
 from main.schemas.metagraph_data import MetagraphData
 
 
@@ -24,8 +24,8 @@ app.include_router(image_prompt_router, prefix="/images")
 app.include_router(text_prompt_router, prefix="/texts")
 
 
-@app.exception_handler(ExceptionBase)
-async def custom_exception_handler(request: Request, exc: ExceptionBase) -> JSONResponse:
+@app.exception_handler(BaseException)
+async def custom_exception_handler(request: Request, exc: BaseException) -> JSONResponse:
     if isinstance(exc, InvalidSignatureException):
         return JSONResponse(status_code=403, content={"error": "Signature error", "message": str(exc)})
     elif isinstance(exc, InvalidApiKeyException):

@@ -1,18 +1,18 @@
-class ExceptionBase(Exception):
+class BaseException(Exception):
     pass
 
 
-class InvalidSignatureException(ExceptionBase):
+class InvalidSignatureException(BaseException):
     pass
 
 
-class InvalidApiKeyException(ExceptionBase):
+class InvalidApiKeyException(BaseException):
     pass
 
 
-class NoDefaultTextPrompts(ExceptionBase):
+class NoDefaultTextPrompts(BaseException):
     pass
 
 
-class NoDefaultImagePrompts(ExceptionBase):
+class NoDefaultImagePrompts(BaseException):
     pass
