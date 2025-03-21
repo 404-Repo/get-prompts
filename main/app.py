@@ -22,6 +22,7 @@ app.include_router(image_prompt_router, prefix="/images")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
+    print(config)
     yield
 
 
