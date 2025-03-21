@@ -28,9 +28,12 @@ async def download_prompt_batch(
     batch = await image_prompt_manager.get()
 
     async def iterfile() -> AsyncGenerator[bytes, None]:
-        async with aiofiles.open(batch.archive_path, "rb") as f:
-            while chunk := await f.read(_CHUNK_SIZE):
-                yield chunk
+        try:
+            async with aiofiles.open(batch.archive_path, "rb") as f:
+                while chunk := await f.read(_CHUNK_SIZE):
+                    yield chunk
+        finally:
+            batch.archive_path.unlink()
 
     return StreamingResponse(
         iterfile(),
