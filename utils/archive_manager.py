@@ -52,6 +52,7 @@ class ZstandardManager(ArchiveManagerBase):
     @staticmethod
     def _compress_files(files: list[Path], archive_path: Path, level: int) -> None:
         # todo Handle errors
+        total_files_size = sum(file.stat().st_size for file in files)
         with archive_path.open("wb") as f_out:
             compressor = ZstdCompressor(level=level)
             with compressor.stream_writer(f_out) as zstd_writer:
@@ -62,3 +63,6 @@ class ZstandardManager(ArchiveManagerBase):
                     # Write filename length (4 bytes) + filename + file size (4 bytes) + file data
                     zstd_writer.write(struct.pack("I", len(filename)) + filename)
                     zstd_writer.write(struct.pack("I", len(data)) + data)
+        archive_size = archive_path.stat().st_size
+        compression_ratio = archive_size / total_files_size if total_files_size else 1
+        print(f"Files size: {total_files_size} Archive Size: {archive_size} Compression ratio: {compression_ratio:.2%}")
