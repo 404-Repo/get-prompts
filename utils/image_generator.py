@@ -87,4 +87,4 @@ class ImageGenerator:
             image.paste(overlay, (0, 0), overlay)
 
 
-ImageGenerator.generate(output_dir="resources/images/default", image_cnt=80000)
+ImageGenerator.generate(output_dir="resources/images/default", image_cnt=10000)

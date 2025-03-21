@@ -1,19 +1,16 @@
-from bittensor import Metagraph
 from fastapi import HTTPException, Security
 from fastapi.security import APIKeyHeader
 from starlette.status import HTTP_403_FORBIDDEN
+from utils.metagraph_manager import MetagraphManager
 
 from main.config import config
 
 
-metagraph = Metagraph(network=config.network, netuid=config.netuid)
+metagraph = MetagraphManager(config=config)
 api_key_header = APIKeyHeader(name="X-Api-Key", auto_error=False)
 
 
-def get_metagraph() -> Metagraph:
-    global metagraph
-    if metagraph is None:
-        metagraph = Metagraph(config)
+def get_metagraph_manager() -> MetagraphManager:
     return metagraph
 
 
