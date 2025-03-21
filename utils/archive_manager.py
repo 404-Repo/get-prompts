@@ -1,9 +1,11 @@
 import asyncio
-import struct
+import zipfile
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from io import BytesIO
 from pathlib import Path
 
-from zstandard import ZstdCompressor, ZstdDecompressor
+from utils.schemas.image_data import ImageData
 
 
 class BaseArchiveManager(ABC):
@@ -15,57 +17,33 @@ class BaseArchiveManager(ABC):
 
     @staticmethod
     @abstractmethod
-    async def decompress(*, archive_path: Path, output_dir: Path) -> None:
+    async def decompress(*, zip_data: BytesIO) -> Iterable[ImageData]:
         pass
 
 
-class ZstandardArchiveManager(BaseArchiveManager):
-    _COMPRESSION_LEVEL: int = 9
-
+class ZipArchiveManager(BaseArchiveManager):
     @staticmethod
     async def compress(*, files: list[Path], archive_path: Path) -> None:
-        await asyncio.to_thread(
-            ZstandardArchiveManager._compress_files,
-            files,
-            archive_path,
-            ZstandardArchiveManager._COMPRESSION_LEVEL,
-        )
+        raise NotImplementedError
 
     @staticmethod
-    async def decompress(*, archive_path: Path, output_dir: Path) -> None:
-        await asyncio.to_thread(ZstandardArchiveManager._decompress_files, archive_path, output_dir)
+    async def decompress(*, zip_data: BytesIO) -> list[ImageData]:
+        def extract_images_sync(zip_data: BytesIO) -> list[ImageData]:
+            images: list[ImageData] = []
+            with zipfile.ZipFile(zip_data, "r") as zip_ref:
+                for file_name in zip_ref.namelist():
+                    try:
+                        with zip_ref.open(file_name) as file:
+                            img_bytes = BytesIO(file.read())
+                            images.append(
+                                ImageData(
+                                    filename=file_name,
+                                    data=img_bytes,
+                                )
+                            )
+                    except Exception as e:
+                        # todo logger
+                        print(f"Failed to extract {file_name} from archive: {e}")
+            return images
 
-    @staticmethod
-    def _decompress_files(archive_path: Path, output_dir: Path) -> None:
-        decompressor = ZstdDecompressor()
-        with archive_path.open("rb") as sync_f:
-            with decompressor.stream_reader(sync_f) as zstd_reader:
-                while True:
-                    filename_length_bytes = zstd_reader.read(4)
-                    if not filename_length_bytes:
-                        break
-                    filename_length = struct.unpack("I", filename_length_bytes)[0]
-                    filename = zstd_reader.read(filename_length).decode()
-                    file_size = struct.unpack("I", zstd_reader.read(4))[0]
-                    file_data = zstd_reader.read(file_size)
-                    output_path = output_dir / filename
-                    with output_path.open("wb") as out_file:
-                        out_file.write(file_data)
-
-    @staticmethod
-    def _compress_files(files: list[Path], archive_path: Path, level: int) -> None:
-        # todo Handle errors
-        total_files_size = sum(file.stat().st_size for file in files)
-        with archive_path.open("wb") as f_out:
-            compressor = ZstdCompressor(level=level)
-            with compressor.stream_writer(f_out) as zstd_writer:
-                for file_path in files:
-                    data = file_path.read_bytes()
-                    filename = file_path.name.encode()  # Store filename
-
-                    # Write filename length (4 bytes) + filename + file size (4 bytes) + file data
-                    zstd_writer.write(struct.pack("I", len(filename)) + filename)
-                    zstd_writer.write(struct.pack("I", len(data)) + data)
-        archive_size = archive_path.stat().st_size
-        compression_ratio = archive_size / total_files_size if total_files_size else 1
-        print(f"Files size: {total_files_size} Archive Size: {archive_size} Compression ratio: {compression_ratio:.2%}")
+        return await asyncio.to_thread(extract_images_sync, zip_data)
