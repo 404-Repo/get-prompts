@@ -3,6 +3,7 @@ import copy
 
 import bittensor as bt
 from bittensor_wallet import Keypair
+from main.exceptions import InvalidSignatureException
 
 
 class MetagraphManager:
@@ -12,18 +13,21 @@ class MetagraphManager:
         self.metagraph = bt.metagraph(netuid=self.config.netuid, network=self.subtensor.network, sync=False)
         self.metagraph.sync(subtensor=self.subtensor)
 
-    def verify_signature(self, hotkey: str, nonce: int, signature: str) -> bool:
+    def verify_signature(self, hotkey: str, nonce: int, signature: str) -> None:
         uid = self._get_neuron_uid(hotkey)
         if uid is None:
-            bt.logging.error(f"{hotkey} is not registered")
-            return False
+            err = f"{hotkey} is not registered"
+            bt.logging.error(err)
+            raise InvalidSignatureException(err)
 
         if (
+            # todo To env
             hotkey != "5E7eSeRr2aHzCV7SkY4a2Pi5NXHrU4anZz3phEQgn4HCen2B"  # subnet owner
             and self.metagraph.S[uid].item() < self.config.min_stake_to_set_weights
         ):
-            bt.logging.error(f"{hotkey} is not a validator. Stake: {self.metagraph.S[uid].item()}")
-            return False
+            err = f"{hotkey} is not a validator. Stake: {self.metagraph.S[uid].item()}"
+            bt.logging.error(err)
+            raise InvalidSignatureException(err)
 
         # TODO: check nonce
 
@@ -31,7 +35,9 @@ class MetagraphManager:
 
         keypair = Keypair(ss58_address=hotkey)
         message = f"{nonce}{hotkey}"
-        return bool(keypair.verify(message, base64.b64decode(signature.encode(encoding="utf-8"))))
+        result = bool(keypair.verify(message, base64.b64decode(signature.encode(encoding="utf-8"))))
+        if not result:
+            raise InvalidSignatureException("signature verification failed.")
 
     def _get_neuron_uid(self, hotkey: str) -> int | None:
         for neuron in self.metagraph.neurons:

@@ -4,16 +4,24 @@ from typing import Any
 
 import uvicorn
 from config import config
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI
 from prompt_manager.image_prompt_endpoints import image_prompt_router
 from prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
 from prompt_manager.text_prompt_endpoints import text_prompt_router
 from prompt_manager.text_prompt_manager import text_prompt_manager
-from starlette.responses import Response
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK
 from utils.metagraph_manager import MetagraphManager
 
 from main.dependencies import get_metagraph_manager, verify_api_key
+from main.exceptions import (
+    ExceptionBase,
+    InvalidApiKeyException,
+    InvalidSignatureException,
+    NoDefaultImagePrompts,
+    NoDefaultTextPrompts,
+)
 from main.schemas.metagraph_data import MetagraphData
 
 
@@ -22,27 +30,46 @@ app.include_router(image_prompt_router, prefix="/images")
 app.include_router(text_prompt_router, prefix="/texts")
 
 
+@app.exception_handler(ExceptionBase)
+async def custom_exception_handler(request: Request, exc: ExceptionBase) -> JSONResponse:
+    if isinstance(exc, InvalidSignatureException):
+        return JSONResponse(status_code=403, content={"error": "Signature error", "message": str(exc)})
+    elif isinstance(exc, InvalidApiKeyException):
+        return JSONResponse(  # 🛠 Fixed: Added missing `return`
+            status_code=403, content={"error": "Invalid API key", "message": str(exc)}
+        )
+    elif isinstance(exc, NoDefaultTextPrompts):
+        return JSONResponse(  # 🛠 Fixed: Added missing `return`
+            status_code=400, content={"error": "No default text prompts", "message": str(exc)}
+        )
+    elif isinstance(exc, NoDefaultImagePrompts):
+        return JSONResponse(  # 🛠 Fixed: Added missing `return`
+            status_code=400, content={"error": "No default image prompts", "message": str(exc)}
+        )
+
+    return JSONResponse(status_code=500, content={"error": "Unhandled Exception", "message": str(exc)})
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     print(config)
     yield
 
 
-# Note: deprecated
+# todo: remove because deprecated
 @app.post("/submit", status_code=HTTP_200_OK, response_class=Response)
 async def submit_strings(batch: TextPromptBatch, api_key: str = Depends(verify_api_key)) -> Response:  # noqa: B008
     text_prompt_manager.submit(batch=TextPromptBatch(prompts=batch.prompts))
     return Response()
 
 
-# Note: deprecated
+# todo: remove because deprecated
 @app.get("/get", response_model=TextPromptBatch)
 async def get_strings(
     request: MetagraphData,
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> BasePromptBatch:
-    if not metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature):
-        raise HTTPException(status_code=403, detail="Invalid signature provided.")
+    metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
     batch = text_prompt_manager.get()
     return batch
 

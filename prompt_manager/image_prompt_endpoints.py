@@ -2,7 +2,7 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 
 import aiofiles  # type: ignore
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
 from main.dependencies import get_metagraph_manager, verify_api_key
 from main.schemas.metagraph_data import MetagraphData
 from starlette.responses import Response, StreamingResponse
@@ -17,7 +17,7 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 _CHUNK_SIZE: int = 1024 * 1024
 
 
-@image_prompt_router.get(
+@image_prompt_router.post(
     path="/download",
     summary="Download batch of image prompts.",
 )
@@ -25,9 +25,7 @@ async def download_prompt_batch(
     request: MetagraphData,
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> StreamingResponse:
-    if not metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature):
-        raise HTTPException(status_code=403, detail="Invalid signature provided.")
-
+    metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
     batch = await image_prompt_manager.get()
 
     async def iterfile() -> AsyncGenerator[bytes, None]:

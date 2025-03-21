@@ -7,6 +7,7 @@ from pathlib import Path
 
 import bittensor as bt
 from main.config import config
+from main.exceptions import NoDefaultTextPrompts
 
 from prompt_manager.base_prompt_manager import BasePromptManager
 from prompt_manager.schemas.prompt_batch import TextPromptBatch
@@ -66,7 +67,7 @@ class TextPromptManager(BasePromptManager[TextPromptBatch]):
 
     def _load_default_prompts(self, path: Path) -> None:
         if not path.exists():
-            raise RuntimeError(f"Dataset file {path} not found")
+            raise NoDefaultTextPrompts(f"Dataset file {path} not found")
 
         with path.open() as f:
             self._dataset = set(f.read().strip().split("\n"))
