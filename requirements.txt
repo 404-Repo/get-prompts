@@ -3,3 +3,7 @@ bittensor-wallet==3.0.4
 fastapi==0.110.1
 pydantic==2.10.6
 starlette==0.37.2
+pillow==11.1.0
+zstandard==0.23.0
+aiofiles==24.1.0
+python-multipart==0.0.20
