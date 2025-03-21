@@ -15,13 +15,7 @@ from starlette.status import HTTP_200_OK
 from utils.metagraph_manager import MetagraphManager
 
 from main.dependencies import get_metagraph_manager, verify_api_key
-from main.exceptions import (
-    ExceptionBase,
-    InvalidApiKeyException,
-    InvalidSignatureException,
-    NoDefaultImagePrompts,
-    NoDefaultTextPrompts,
-)
+from main.exceptions import ExceptionBase, InvalidApiKeyException, InvalidSignatureException
 from main.schemas.metagraph_data import MetagraphData
 
 
@@ -37,14 +31,6 @@ async def custom_exception_handler(request: Request, exc: ExceptionBase) -> JSON
     elif isinstance(exc, InvalidApiKeyException):
         return JSONResponse(  # 🛠 Fixed: Added missing `return`
             status_code=403, content={"error": "Invalid API key", "message": str(exc)}
-        )
-    elif isinstance(exc, NoDefaultTextPrompts):
-        return JSONResponse(  # 🛠 Fixed: Added missing `return`
-            status_code=400, content={"error": "No default text prompts", "message": str(exc)}
-        )
-    elif isinstance(exc, NoDefaultImagePrompts):
-        return JSONResponse(  # 🛠 Fixed: Added missing `return`
-            status_code=400, content={"error": "No default image prompts", "message": str(exc)}
         )
 
     return JSONResponse(status_code=500, content={"error": "Unhandled Exception", "message": str(exc)})

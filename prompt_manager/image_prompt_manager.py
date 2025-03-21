@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from main.config import config
+from main.exceptions import NoDefaultImagePrompts
 from utils.archive_manager import ZstandardManager
 
 from prompt_manager.base_prompt_manager import BasePromptManager
@@ -20,6 +21,9 @@ class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
         # todo Cleanup cron job for the temp files in case of usual clean up failure.
         super().__init__(resources_dir=resources_dir, batch_size=batch_size)
         self._default_image_dir = self._resource_dir / self._DEFAULT_IMAGE_DIR
+        if not self._default_image_dir.exists():
+            raise NoDefaultImagePrompts(f"Default image directory does not exist: {self._default_image_dir}")
+
         self._submitted_image_dir = self._resource_dir / self._SUBMITTED_IMAGE_DIR
         self._submitted_image_dir.mkdir(parents=True, exist_ok=True)
         self._temp_dir = self._resource_dir / self._TEMP_DIR
