@@ -4,7 +4,7 @@ from pathlib import Path
 
 from main.config import config
 from main.exceptions import NoDefaultImagePrompts
-from utils.archive_manager import ZstandardManagerArchiveManager
+from utils.archive_manager import ZstandardArchiveManager
 
 from prompt_manager.base_prompt_manager import BasePromptManager
 from prompt_manager.schemas.prompt_batch import ImagePromptBatch
@@ -31,9 +31,7 @@ class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
 
     async def submit(self, *, batch: ImagePromptBatch) -> None:
         # todo Check format of the uploaded images?
-        await ZstandardManagerArchiveManager.decompress(
-            archive_path=batch.archive_path, output_dir=self._submitted_image_dir
-        )
+        await ZstandardArchiveManager.decompress(archive_path=batch.archive_path, output_dir=self._submitted_image_dir)
         batch.archive_path.unlink()
 
     async def get(self) -> ImagePromptBatch:
@@ -43,7 +41,7 @@ class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
         files.extend([f for f in self._submitted_image_dir.iterdir()])
         batch_files = rd.sample(files, self._batch_size)
         archive_path = self.get_archive_path()
-        await ZstandardManagerArchiveManager.compress(files=batch_files, archive_path=archive_path)
+        await ZstandardArchiveManager.compress(files=batch_files, archive_path=archive_path)
         return ImagePromptBatch(archive_path=archive_path)
 
     def get_archive_path(self) -> Path:

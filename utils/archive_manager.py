@@ -19,21 +19,21 @@ class BaseArchiveManager(ABC):
         pass
 
 
-class ZstandardManagerArchiveManager(BaseArchiveManager):
+class ZstandardArchiveManager(BaseArchiveManager):
     _COMPRESSION_LEVEL: int = 9
 
     @staticmethod
     async def compress(*, files: list[Path], archive_path: Path) -> None:
         await asyncio.to_thread(
-            ZstandardManagerArchiveManager._compress_files,
+            ZstandardArchiveManager._compress_files,
             files,
             archive_path,
-            ZstandardManagerArchiveManager._COMPRESSION_LEVEL,
+            ZstandardArchiveManager._COMPRESSION_LEVEL,
         )
 
     @staticmethod
     async def decompress(*, archive_path: Path, output_dir: Path) -> None:
-        await asyncio.to_thread(ZstandardManagerArchiveManager._decompress_files, archive_path, output_dir)
+        await asyncio.to_thread(ZstandardArchiveManager._decompress_files, archive_path, output_dir)
 
     @staticmethod
     def _decompress_files(archive_path: Path, output_dir: Path) -> None:
