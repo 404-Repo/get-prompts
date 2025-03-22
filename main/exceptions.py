@@ -10,7 +10,7 @@ class InvalidApiKeyException(BaseException):
     pass
 
 
-class NoDefaultTextPrompts(BaseException):
+class FileWithTextDataDoesntExist(BaseException):
     pass
 
 

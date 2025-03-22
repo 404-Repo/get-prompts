@@ -3,6 +3,6 @@ from io import BytesIO
 from pydantic import BaseModel
 
 
-class ImageData(BaseModel):
-    data: BytesIO
+class ImagePrompt(BaseModel):
+    image_data: BytesIO
     filename: str

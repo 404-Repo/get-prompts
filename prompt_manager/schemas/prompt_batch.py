@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from utils.schemas.image_data import ImageData
+from utils.schemas.image_prompt import ImagePrompt
 
 
 class BasePromptBatch(BaseModel):
@@ -11,4 +11,4 @@ class TextPromptBatch(BasePromptBatch):
 
 
 class ImagePromptBatch(BasePromptBatch):
-    image_datas: list[ImageData]
+    image_prompts: list[ImagePrompt]

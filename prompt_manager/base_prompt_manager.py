@@ -16,5 +16,5 @@ class BasePromptManager(ABC, Generic[BatchT]):
         pass
 
     @abstractmethod
-    async def get(self) -> BatchT:
+    async def get_batch(self) -> BatchT:
         pass

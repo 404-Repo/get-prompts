@@ -12,10 +12,10 @@ def read_config() -> bt.config:
     parser.add_argument("--port", type=int, help="Service port", default=80)
     parser.add_argument("--api-key", type=str, help="API-KEY to auth prompt generators.", default="")
     parser.add_argument(
-        "--text_resource_dir",
+        "--text_prompt_resource_file",
         type=str,
-        help="Folder with text prompts. Used to load default_prompts and backup actual prompts.",
-        default="resources/texts",
+        help="File with default text prompts.",
+        default="resources/texts/default_prompts.txt",
     )
     parser.add_argument(
         "--image_resource_dir",
@@ -28,6 +28,12 @@ def read_config() -> bt.config:
     )
     parser.add_argument(
         "--text_prompt_batch_size", type=int, help="Number of text prompts to return to validators.", default=100000
+    )
+    parser.add_argument(
+        "--text_prompt_storage_size",
+        type=int,
+        help="Number of text prompts to save in memory for valiators.",
+        default=100000,
     )
     parser.add_argument(
         "--image_prompt_batch_size", type=int, help="Number of image prompts to return to validators.", default=2500

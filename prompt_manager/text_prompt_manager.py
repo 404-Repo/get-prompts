@@ -1,13 +1,5 @@
-import copy
-import random
-import threading
-import time
-from collections import deque
-from pathlib import Path
-
-import bittensor as bt
 from main.config import config
-from main.exceptions import NoDefaultTextPrompts
+from utils.prompt_storage import InMemoryTextPromptStorage
 
 from prompt_manager.base_prompt_manager import BasePromptManager
 from prompt_manager.schemas.prompt_batch import TextPromptBatch
@@ -16,80 +8,36 @@ from prompt_manager.schemas.prompt_batch import TextPromptBatch
 class TextPromptManager(BasePromptManager[TextPromptBatch]):
     _DEFAULT_PROMPTS_FILENAME: str = "default_prompts.txt"
 
-    def __init__(self, *, resources_dir: Path, batch_size: int, backup_interval: int) -> None:
-        super().__init__(resources_dir=resources_dir, batch_size=batch_size)
-        self._dataset: set[str] = set()
-        """All known prompts."""
-        self._latest: set[str] = set()
-        """Fresh batch of prompts to share with validators."""
-        self._submits: deque[set[str]] = deque()
-        """Recent submits, sorted by submit time."""
-        self._last_backup_time: float = time.time()
-        self._backup_interval: int = backup_interval
-        self._load_default_prompts(self._resource_dir / self._DEFAULT_PROMPTS_FILENAME)
+    def __init__(
+        self,
+        *,
+        default_text_storage: InMemoryTextPromptStorage,
+        submitted_text_storage: InMemoryTextPromptStorage,
+        batch_size: int,
+    ) -> None:
+        super().__init__(batch_size=batch_size)
+        self._default_text_storage = default_text_storage
+        self._submitted_text_storage = submitted_text_storage
 
     def submit(self, *, batch: TextPromptBatch) -> None:  # type: ignore
-        """Add new prompts to the dataset."""
+        self._submitted_text_storage.add(prompts=batch.prompts)
 
-        unique = set(batch.prompts)
-        prev_size = len(self._dataset)
-        self._dataset.update(unique)
-
-        bt.logging.info(
-            f"{len(batch.prompts)} prompts submitted. {len(unique)} unique prompts. "
-            f"{len(self._dataset) - prev_size} new prompts"
-        )
-
-        self._submits.append(unique)
-        self._latest.update(unique)
-
-        bt.logging.info(f"{len(self._latest)} freshly minted prompts")
-
-        while len(self._submits) > 0 and len(self._latest) - len(self._submits[0]) > self._batch_size:
-            oldest_submit = self._submits.popleft()
-            self._latest = self._latest - oldest_submit
-
-        bt.logging.info(f"{len(self._latest)} prompts after prunning the old ones")
-
-        if self._last_backup_time + self._backup_interval < time.time():
-            self._last_backup_time = time.time()
-            self._backup()
-
-    def get(self) -> TextPromptBatch:  # type: ignore
-        """Return the newest prompts."""
-        latest_available = len(self._latest)
-        if latest_available > self._batch_size:
-            return TextPromptBatch(prompts=list(self._latest)[: self._batch_size])
-
-        r = list(self._dataset)
-        random.shuffle(r)
-        return TextPromptBatch(prompts=list(self._latest) + r[: self._batch_size - latest_available])
-
-    def _load_default_prompts(self, path: Path) -> None:
-        if not path.exists():
-            raise NoDefaultTextPrompts(f"Dataset file {path} not found")
-
-        with path.open() as f:
-            self._dataset = set(f.read().strip().split("\n"))
-
-        bt.logging.info(f"{len(self._dataset)} prompts loaded")
-
-    def _backup(self) -> None:
-        cur_time = int(time.time())
-        file_name = f"prompts_{cur_time}.txt"
-        dataset_path = self._resource_dir / file_name
-        thread = threading.Thread(target=self._perform_backup, args=(dataset_path, copy.copy(self._dataset)))
-        thread.start()
-
-    def _perform_backup(self, dataset_path: Path, data: set[str]) -> None:
-        with dataset_path.open("w") as f:
-            for prompt in data:
-                f.write(prompt + "\n")
+    def get_batch(self) -> TextPromptBatch:  # type: ignore
+        texts = self._submitted_text_storage.get_batch(batch_size=self._batch_size)
+        if len(texts) < self._batch_size:
+            additional_text_cnt = self._batch_size - len(texts)
+            default_texts = self._default_text_storage.get_batch(batch_size=additional_text_cnt)
+            texts.extend(default_texts)
+        return TextPromptBatch(prompts=texts)
 
 
 text_prompt_manager = TextPromptManager(
-    resources_dir=Path(config.text_resource_dir),
+    default_text_storage=InMemoryTextPromptStorage(
+        max_text_cnt=config.text_prompt_storage_size,
+        file_path=config.text_prompt_resource_file,
+    ),
+    submitted_text_storage=InMemoryTextPromptStorage(
+        max_text_cnt=config.text_prompt_storage_size,
+    ),
     batch_size=config.text_prompt_batch_size,
-    backup_interval=config.backup_interval,
 )
-# todo check resources path

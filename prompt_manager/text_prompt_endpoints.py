@@ -26,5 +26,5 @@ async def fetch_text_prompt_batch(
     metagraph: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> BasePromptBatch:
     metagraph.verify_signature(request.hotkey, request.nonce, request.signature)
-    batch = text_prompt_manager.get()
+    batch = text_prompt_manager.get_batch()
     return batch
