@@ -1,8 +1,7 @@
-from io import BytesIO
-
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 
-class ImagePrompt(BaseModel):
-    image_data: BytesIO
+@dataclass
+class ImagePrompt:
+    image_data: bytes
     filename: str

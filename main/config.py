@@ -24,9 +24,6 @@ def read_config() -> bt.config:
         default="resources/images",
     )
     parser.add_argument(
-        "--backup_interval", type=int, help="Time interval to save new text prompts dataset to a file.", default=60 * 60
-    )
-    parser.add_argument(
         "--text_prompt_batch_size", type=int, help="Number of text prompts to return to validators.", default=100000
     )
     parser.add_argument(
