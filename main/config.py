@@ -33,6 +33,12 @@ def read_config() -> bt.config:
         "--image_prompt_batch_size", type=int, help="Number of image prompts to return to validators.", default=2500
     )
     parser.add_argument(
+        "--submitted_image_prompt_buffer_size",
+        type=int,
+        help="Number of submitted image prompts to save in memory.",
+        default=10000,
+    )
+    parser.add_argument(
         "--min_stake_to_set_weights",
         type=int,
         help="Minimal required stake to set weights.",

@@ -1,27 +1,40 @@
+import asyncio
 import random as rd
 from abc import ABC, abstractmethod
 from collections import deque
-from collections.abc import Iterable
 from io import BytesIO
 from pathlib import Path
+from typing import Generic, TypeVar
 
+import aiofiles  # type: ignore
 from main.exceptions import NoDefaultImagePrompts
 
 from utils.schemas.image_data import ImageData
 
 
-class BaseImageStorage(ABC):
+DataT = TypeVar("DataT")
+
+
+class BaseDataStorage(ABC, Generic[DataT]):
 
     @abstractmethod
-    def get(self, *, batch_size: int) -> Iterable[ImageData]:
+    def get(self, *, batch_size: int) -> list[DataT]:
         pass
 
     @abstractmethod
-    def add(self, *, images: list[ImageData]) -> None:
+    def add(self, *, datas: list[DataT]) -> None:
         pass
 
 
-class DiskImageStorage(BaseImageStorage):
+class DiskTextStorage(BaseDataStorage[str]):
+    def get(self, *, batch_size: int) -> list[str]:
+        raise NotImplementedError()
+
+    def add(self, *, datas: list[str]) -> None:
+        raise NotImplementedError()
+
+
+class DiskImageStorage(BaseDataStorage[ImageData]):
     def __init__(self, *, resources_dir: Path, min_default_file_cnt: int) -> None:
         self._resources_dir = resources_dir
         if not self._resources_dir.exists():
@@ -33,39 +46,35 @@ class DiskImageStorage(BaseImageStorage):
                 f"that is less than minimal amount {min_default_file_cnt}."
             )
 
-    def get(self, *, batch_size: int) -> Iterable[ImageData]:
-        image_datas: list[ImageData] = []
+    async def get(self, *, batch_size: int) -> list[ImageData]:  # type: ignore
         file_paths = [f for f in self._resources_dir.iterdir()]
-        selected_file_paths = rd.sample(file_paths, batch_size)
-        for file_path in selected_file_paths:
-            with file_path.open("rb") as f:
-                data = BytesIO(f.read())
-                image_datas.append(
-                    ImageData(
-                        data=data,
-                        filename=file_path.name,
-                    )
-                )
+        selected_file_paths = rd.sample(file_paths, min(batch_size, len(file_paths)))
 
+        async def read_file(file_path: Path) -> ImageData:
+            async with aiofiles.open(file_path, "rb") as f:
+                data = await f.read()
+            return ImageData(data=BytesIO(data), filename=file_path.name)
+
+        image_datas = await asyncio.gather(*(read_file(fp) for fp in selected_file_paths))
         return image_datas
 
-    def add(self, *, images: list[ImageData]) -> None:
+    def add(self, *, datas: list[ImageData]) -> None:
         raise NotImplementedError()
 
 
-class InMemoryImageStorage(BaseImageStorage):
+class InMemoryImageStorage(BaseDataStorage[ImageData]):
     def __init__(self, *, max_image_cnt: int) -> None:
         self._max_image_cnt = max_image_cnt
         self._images: deque[ImageData] = deque()
         self._filenames: set[str] = set()
 
-    def get(self, *, batch_size: int) -> Iterable[ImageData]:
+    def get(self, *, batch_size: int) -> list[ImageData]:
         if len(self._images) < self._max_image_cnt:
             return rd.sample(self._images, batch_size)
-        return self._images
+        return list(self._images)
 
-    def add(self, *, images: list[ImageData]) -> None:
-        unique_images = filter(lambda im: im.filename not in self._filenames, images)
+    def add(self, *, datas: list[ImageData]) -> None:
+        unique_images = (im for im in self._images if im.filename not in self._filenames)
         unique_image_cnt = sum(1 for _ in unique_images)
         total_cnt = unique_image_cnt + len(self._images)
         if total_cnt > self._max_image_cnt:

@@ -1,6 +1,5 @@
-from pathlib import Path
-
 from pydantic import BaseModel
+from utils.schemas.image_data import ImageData
 
 
 class BasePromptBatch(BaseModel):
@@ -12,4 +11,4 @@ class TextPromptBatch(BasePromptBatch):
 
 
 class ImagePromptBatch(BasePromptBatch):
-    archive_path: Path
+    image_datas: list[ImageData]
