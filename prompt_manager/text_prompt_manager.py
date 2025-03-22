@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from main.config import config
 from utils.prompt_storage import InMemoryTextPromptStorage
 
@@ -34,7 +36,7 @@ class TextPromptManager(BasePromptManager[TextPromptBatch]):
 text_prompt_manager = TextPromptManager(
     default_text_storage=InMemoryTextPromptStorage(
         max_text_cnt=config.text_prompt_storage_size,
-        file_path=config.text_prompt_resource_file,
+        file_path=Path(config.default_text_prompt_file),
     ),
     submitted_text_storage=InMemoryTextPromptStorage(
         max_text_cnt=config.text_prompt_storage_size,

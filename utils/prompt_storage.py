@@ -1,4 +1,5 @@
 import asyncio
+import os
 import random as rd
 from abc import ABC, abstractmethod
 from collections import deque
@@ -28,11 +29,15 @@ class BasePromptStorage(ABC, Generic[PromptT]):
 
 class InMemoryTextPromptStorage(BasePromptStorage[str]):
     def __init__(self, *, max_text_cnt: int, file_path: Path | None = None) -> None:
+        print("InMemoryTextPromptStorage init")
         self._max_prompt_cnt = max_text_cnt
-        if file_path:
+        self._prompts: deque[str] = deque(maxlen=self._max_prompt_cnt)
+        self._prompt_set = set()
+        if file_path is not None:
             if not file_path.exists():
                 raise FileWithTextDataDoesntExist(f"File {file_path} does not exist.")
-            with file_path.open() as f:
+            with file_path.open("r") as f:
+                print(file_path)
                 self._prompts = deque(f.readlines())
                 self._prompt_set = set(self._prompts)
         bt.logging.info(f"{len(self._prompts)} prompts loaded")
@@ -57,14 +62,16 @@ class InMemoryTextPromptStorage(BasePromptStorage[str]):
 
 class DiskImagePromptStorage(BasePromptStorage[ImagePrompt]):
     def __init__(self, *, resources_dir: Path, min_prompt_cnt: int) -> None:
+        print("DiskImagePromptStorage init")
         self._resources_dir = resources_dir
         if not self._resources_dir.exists():
             raise NoDefaultImagePrompts(f"{self._resources_dir} does not exist.")
-        file_cnt = sum(1 for f in self._resources_dir.iterdir() if f.is_file())
+        file_cnt = sum(1 for entry in os.scandir(self._resources_dir) if entry.is_file())
         if file_cnt < min_prompt_cnt:
             raise NoDefaultImagePrompts(
                 f"There are {file_cnt} default images available " f"that is less than minimal amount {min_prompt_cnt}."
             )
+        print("DiskImagePromptStorage done")
 
     async def get_batch(self, *, batch_size: int) -> list[ImagePrompt]:  # type: ignore
         file_paths = [f for f in self._resources_dir.iterdir()]
@@ -84,6 +91,7 @@ class DiskImagePromptStorage(BasePromptStorage[ImagePrompt]):
 
 class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
     def __init__(self, *, max_prompt_cnt: int) -> None:
+        print("InMemoryImagePromptStorage init")
         self._max_prompt_cnt = max_prompt_cnt
         self._image_prompts: deque[ImagePrompt] = deque()
         self._filenames: set[str] = set()

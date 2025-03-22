@@ -9,19 +9,19 @@ def read_config() -> bt.config:
     bt.subtensor.add_args(parser)
 
     parser.add_argument("--netuid", type=int, help="Subnet netuid", default=17)
-    parser.add_argument("--port", type=int, help="Service port", default=80)
+    parser.add_argument("--port", type=int, help="Service port", default=8093)
     parser.add_argument("--api-key", type=str, help="API-KEY to auth prompt generators.", default="")
     parser.add_argument(
-        "--text_prompt_resource_file",
+        "--default_text_prompt_file",
         type=str,
         help="File with default text prompts.",
         default="resources/texts/default_prompts.txt",
     )
     parser.add_argument(
-        "--image_resource_dir",
+        "--default_image_prompt_dir",
         type=str,
         help="Folder with image prompts.",
-        default="resources/images",
+        default="resources/images/default",
     )
     parser.add_argument(
         "--text_prompt_batch_size", type=int, help="Number of text prompts to return to validators.", default=100000
