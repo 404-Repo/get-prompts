@@ -27,7 +27,7 @@ class ZipArchiveManager(BaseArchiveManager):
             buffer = BytesIO()
             with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                 for data in image_prompts:
-                    zip_file.writestr(data.filename, data.image_data.getvalue())
+                    zip_file.writestr(data.filename, data.image_data)
             buffer.seek(0)
             return buffer
 
@@ -42,7 +42,7 @@ class ZipArchiveManager(BaseArchiveManager):
                 for file_name in zip_ref.namelist():
                     try:
                         with zip_ref.open(file_name) as file:
-                            img_bytes = BytesIO(file.read())
+                            img_bytes = file.read()
                             prompts.append(
                                 ImagePrompt(
                                     filename=file_name,

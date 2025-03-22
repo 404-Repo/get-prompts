@@ -2,7 +2,6 @@ import asyncio
 import random as rd
 from abc import ABC, abstractmethod
 from collections import deque
-from io import BytesIO
 from pathlib import Path
 from typing import Generic, TypeVar
 
@@ -74,7 +73,7 @@ class DiskImagePromptStorage(BasePromptStorage[ImagePrompt]):
         async def read_file(file_path: Path) -> ImagePrompt:
             async with aiofiles.open(file_path, "rb") as f:
                 data = await f.read()
-            return ImagePrompt(image_data=BytesIO(data), filename=file_path.name)
+            return ImagePrompt(image_data=data, filename=file_path.name)
 
         image_datas = await asyncio.gather(*(read_file(fp) for fp in selected_file_paths))
         return image_datas
