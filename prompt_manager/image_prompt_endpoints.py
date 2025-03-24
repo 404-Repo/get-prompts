@@ -1,11 +1,12 @@
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
-from main.dependencies import get_metagraph_manager
+from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
+from main.dependencies import get_metagraph_manager, verify_api_key
 from starlette.responses import Response, StreamingResponse
 from utils.image_serializer import image_prompt_serializer
 from utils.metagraph_manager import MetagraphManager
+from utils.schemas.metagraph_data import MetagraphData
 
 from prompt_manager.image_prompt_manager import image_prompt_manager
 from prompt_manager.schemas.prompt_batch import ImagePromptBatch
@@ -24,16 +25,15 @@ _CHUNK_SIZE: int = 1024 * 1024
     summary="Download batch of image prompts.",
 )
 async def download_prompt_batch(
-    # request: MetagraphData,
+    request: MetagraphData,
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> StreamingResponse:
-    # metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
+    metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
     filename = f"{datetime.now().timestamp()}.msgpack"
     _logger.info(f"Creating batch for {filename}")
     batch = await image_prompt_manager.get_batch()
     _logger.info(f"Batch created for {filename}")
 
-    # background_tasks.add_task(zip_data.close)
     _logger.info(f"Returning {filename}...")
 
     return StreamingResponse(
@@ -49,7 +49,8 @@ async def download_prompt_batch(
 )
 async def upload_file(
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),  # api_key: str = Depends(verify_api_key)  # noqa: B008
+    file: UploadFile,
+    api_key: str = Depends(verify_api_key),  # noqa: B008
 ) -> Response:
     _logger.info(f"Uploading {file.filename} to memory.")
     image_prompts = await image_prompt_serializer.deserialize(file=file)
