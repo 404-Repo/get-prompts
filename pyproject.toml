@@ -14,6 +14,9 @@ zstandard = "^0.23.0"
 aiofiles = "^24.1.0"
 types-aiofiles = "^24.1.0.20241221"
 python-multipart = "^0.0.20"
+msgpack = "^1.1.0"
+psutil = "^7.0.0"
+apscheduler = "^3.11.0"
 
 [tool.poetry.group.dev.dependencies]
 poetry = { version = "2.1.1" }

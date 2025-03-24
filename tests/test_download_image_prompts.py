@@ -1,39 +1,45 @@
 import asyncio
 from pathlib import Path
+from random import randint
 
+import aiofiles  # type: ignore
 import httpx
+import msgpack
 
 
-def extract_filename_from_headers(headers: dict[str, str]) -> str | None:
-    content_disposition = headers.get("content-disposition", "")
-    if "attachment" in content_disposition:
-        return content_disposition.replace("attachment; filename=", "")
-    return None
+async def unpack_message_pack_stream(url: str) -> None:
+    dir_name = f"{randint(0,10000)}"
 
-
-async def download_file_from_external_server(url: str) -> None:
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, timeout=100000)
-        response.raise_for_status()  # Check for HTTP errors
+        unpacker = msgpack.Unpacker(raw=False)
+        async with client.stream("GET", url) as response:
+            if response.status_code != 200:
+                return
+            # Stream the data in chunks and process each chunk
+            async for chunk in response.aiter_bytes():
+                unpacker.feed(chunk)
+                for data in unpacker:
+                    filename = data["filename"]
+                    data = data["data"]
+                    # Save the image data to disk (ensure that filenames are safe)
+                    dir_path = Path("temp") / dir_name
+                    dir_path.mkdir(parents=True, exist_ok=True)
+                    file_path = dir_path / filename
 
-        save_path = Path("temp/tests")
-        save_path.mkdir(parents=True, exist_ok=True)
-
-        print(response.headers)
-        filename = extract_filename_from_headers(response.headers)
-        if filename is not None:
-            filepath = Path(save_path) / filename
-            with filepath.open("wb") as file:
-                for chunk in response.iter_bytes():
-                    file.write(chunk)
-            print(f"File saved at {save_path}")
-
-
-async def test_multiple_concurrent_downloads() -> None:
-    tasks = [download_file_from_external_server("http://localhost:8093/images/download") for _ in range(20)]
-    await asyncio.gather(*tasks)
+                    async with aiofiles.open(file_path, "wb") as f:
+                        await f.write(data)
 
 
-if __name__ == "__main__":
-    asyncio.run(test_multiple_concurrent_downloads())
-    print("All downloads completed! ✅")
+async def main() -> None:
+    async with httpx.AsyncClient():
+        url = "http://localhost:8093/images/download"
+
+        # Create a list of tasks for concurrent fetching
+        tasks = [unpack_message_pack_stream(url) for _ in range(20)]
+
+        # Await all tasks to run concurrently
+        await asyncio.gather(*tasks)
+
+
+# Run the asynchronous main function
+asyncio.run(main())

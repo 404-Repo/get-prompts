@@ -1,25 +1,34 @@
 import base64
 import copy
+import logging
 
 import bittensor as bt
+from bittensor import AsyncSubtensor
+from bittensor.core.metagraph import AsyncMetagraph
 from bittensor_wallet import Keypair
 from main.exceptions import InvalidSignatureException
 
 
+logger = logging.getLogger("uvicorn")
+logging.basicConfig(level=logging.INFO)
+
+
 class MetagraphManager:
     def __init__(self, config: bt.config) -> None:
-        print("Metagraph init")
+        logger.info("Metagraph init")
         self.config = copy.deepcopy(config)
-        self.subtensor = bt.subtensor(config=self.config)
-        self.metagraph = bt.metagraph(netuid=self.config.netuid, network=self.subtensor.network, sync=False)
-        self.metagraph.sync(subtensor=self.subtensor)
-        print("Metagraph init done")
+        self.subtensor = AsyncSubtensor(config=self.config)
+        self.metagraph = AsyncMetagraph(netuid=self.config.netuid, network=self.subtensor.network, sync=False)
+        logger.info("Metagraph init done")
+
+    async def sync(self) -> None:
+        await self.metagraph.sync(subtensor=self.subtensor)
 
     def verify_signature(self, hotkey: str, nonce: int, signature: str) -> None:
         uid = self._get_neuron_uid(hotkey)
         if uid is None:
             err = f"{hotkey} is not registered"
-            bt.logging.error(err)
+            logger.error(err)
             raise InvalidSignatureException(err)
 
         if (
@@ -28,7 +37,7 @@ class MetagraphManager:
             and self.metagraph.S[uid].item() < self.config.min_stake_to_set_weights
         ):
             err = f"{hotkey} is not a validator. Stake: {self.metagraph.S[uid].item()}"
-            bt.logging.error(err)
+            logger.error(err)
             raise InvalidSignatureException(err)
 
         # TODO: check nonce

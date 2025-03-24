@@ -48,10 +48,10 @@ def read_config() -> bt.config:
         default=1,
     )
     parser.add_argument(
-        "--max_concurrent_image_tasks",
+        "--image_prompt_chunk_size",
         type=int,
-        help="Maximal concurrent image tasks. " "In order to not exceed RAM limit when validators download images.",
-        default=15,
+        help="Chunk size used to send image files.",
+        default=1024 * 1024,
     )
 
     return bt.config(parser)

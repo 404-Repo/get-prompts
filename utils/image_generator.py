@@ -1,8 +1,12 @@
+import logging
 import random
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
+
+
+_logger = logging.getLogger(__name__)
 
 
 class ImageGenerator:
@@ -31,11 +35,11 @@ class ImageGenerator:
 
                 # Save as Webp
                 img.save(img_path, "WEBP", quality=100)
-                print(f"Generated image at {img_path}")
+                _logger.info(f"Generated image at {img_path}")
             except Exception as e:
-                print(f"Exception during generation of file {img_path}: {e}")
+                _logger.info(f"Exception during generation of file {img_path}: {e}")
 
-        print(f"✅ Successfully generated {image_cnt} heavy WebP images in '{output_dir}'")
+        _logger.info(f"✅ Successfully generated {image_cnt} heavy WebP images in '{output_dir}'")
 
     @staticmethod
     def _random_color() -> tuple[int, ...]:

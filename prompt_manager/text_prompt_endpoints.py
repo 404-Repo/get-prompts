@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from main.dependencies import get_metagraph_manager, verify_api_key
-from main.schemas.metagraph_data import MetagraphData
 from starlette.responses import Response
 from starlette.status import HTTP_200_OK
 from utils.metagraph_manager import MetagraphManager
+from utils.schemas.metagraph_data import MetagraphData
 
 from prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
 from prompt_manager.text_prompt_manager import text_prompt_manager

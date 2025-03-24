@@ -1,6 +1,7 @@
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import uvicorn
@@ -13,25 +14,43 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK
 from utils.metagraph_manager import MetagraphManager
+from utils.schemas.metagraph_data import MetagraphData
 
 from main.config import config
+from main.cron.check_ram_job import CheckRAMCronJob
+from main.cron.cron_scheduler import CronScheduler
+from main.cron.sync_metagraph_job import SyncMetagraphCronJob
 from main.dependencies import get_metagraph_manager, verify_api_key
-from main.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException
-from main.schemas.metagraph_data import MetagraphData
+from main.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException, NotEnoughImages
+
+
+logger = logging.getLogger("uvicorn")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
-    print(config)
+    next_run_time = datetime.now(UTC) + timedelta(seconds=1)
+
+    CronScheduler.add_job(
+        job_type=CheckRAMCronJob,
+        id="check_ram_cron_job",
+        trigger="interval",
+        minutes=1,
+        next_run_time=next_run_time,
+        misfire_grace_time=60,
+    )
+    CronScheduler.add_job(
+        job_type=SyncMetagraphCronJob,
+        id="sync_metagraph_cron_job",
+        trigger="interval",
+        minutes=30,
+        next_run_time=next_run_time,
+        misfire_grace_time=60,
+    )
+    CronScheduler.start()
     yield
-
-
-# Configure the logging module to show internal logs
-logging.basicConfig(level=logging.DEBUG)
-
-# Get the Uvicorn logger and set the log level to DEBUG
-uvicorn_logger = logging.getLogger("uvicorn")
-uvicorn_logger.setLevel(logging.DEBUG)
+    CronScheduler.shutdown()
+    yield
 
 
 app = FastAPI(lifespan=lifespan)
@@ -46,6 +65,10 @@ async def custom_exception_handler(request: Request, exc: BaseException) -> JSON
     elif isinstance(exc, InvalidApiKeyException):
         return JSONResponse(  # 🛠 Fixed: Added missing `return`
             status_code=403, content={"error": "Invalid API key", "message": str(exc)}
+        )
+    elif isinstance(exc, NotEnoughImages):
+        return JSONResponse(  # 🛠 Fixed: Added missing `return`
+            status_code=400, content={"error": "Not enough images", "message": str(exc)}
         )
 
     return JSONResponse(status_code=500, content={"error": "Unhandled Exception", "message": str(exc)})
@@ -70,4 +93,4 @@ async def get_strings(
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=config.port, log_level="debug", access_log=True)  # noqa: S104
+    uvicorn.run(app, host="0.0.0.0", port=config.port)  # noqa: S104

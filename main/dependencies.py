@@ -6,12 +6,12 @@ from main.config import config
 from main.exceptions import InvalidApiKeyException
 
 
-metagraph = MetagraphManager(config=config)
+metagraph_manager = MetagraphManager(config=config)
 api_key_header = APIKeyHeader(name="X-Api-Key", auto_error=False)
 
 
 def get_metagraph_manager() -> MetagraphManager:
-    return metagraph
+    return metagraph_manager
 
 
 def verify_api_key(x_api_key: str = Security(api_key_header)) -> str:
