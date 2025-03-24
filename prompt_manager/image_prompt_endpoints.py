@@ -19,30 +19,37 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 _CHUNK_SIZE: int = 1024 * 1024
 
 
-@image_prompt_router.post(
+@image_prompt_router.get(
     path="/download",
     summary="Download batch of image prompts.",
 )
 async def download_prompt_batch(
     request: MetagraphData,
-    background_tasks: BackgroundTasks,
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> StreamingResponse:
     metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
+    filename = f"{datetime.now().timestamp()}.zip"
+    print(f"Creating batch for {filename}")
     batch = await image_prompt_manager.get_batch()
+    print(f"Batch created for {filename}")
+    print(f"Compressing {filename}")
     zip_data = await ZipArchiveManager.compress(image_prompts=batch.image_prompts)
+    print(f"Compressed {filename} {zip_data.getbuffer().nbytes}")
 
     async def file_stream(zip_data: BytesIO) -> AsyncGenerator[bytes, Any]:
-        while chunk := zip_data.read(_CHUNK_SIZE):
-            yield chunk
-        zip_data.close()
+        try:
+            while chunk := zip_data.read(_CHUNK_SIZE):
+                yield chunk
+        finally:
+            zip_data.close()
 
-    background_tasks.add_task(zip_data.close)
+    # background_tasks.add_task(zip_data.close)
+    print(f"Returning {filename}...")
 
     return StreamingResponse(
         file_stream(zip_data),
-        media_type="application/octet-stream",
-        headers={"Content-Disposition": f"attachment; filename={datetime.now().timestamp()}.zip"},
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 

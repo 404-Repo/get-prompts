@@ -61,9 +61,12 @@ class InMemoryTextPromptStorage(BasePromptStorage[str]):
 
 
 class DiskImagePromptStorage(BasePromptStorage[ImagePrompt]):
-    def __init__(self, *, resources_dir: Path, min_prompt_cnt: int) -> None:
+    _FILE_CHUNK: int = 10
+
+    def __init__(self, *, resources_dir: Path, min_prompt_cnt: int, max_concurrent_tasks_cnt: int) -> None:
         print("DiskImagePromptStorage init")
         self._resources_dir = resources_dir
+        self._semaphor = asyncio.Semaphore(max_concurrent_tasks_cnt)
         if not self._resources_dir.exists():
             raise NoDefaultImagePrompts(f"{self._resources_dir} does not exist.")
         file_cnt = sum(1 for entry in os.scandir(self._resources_dir) if entry.is_file())
@@ -79,11 +82,24 @@ class DiskImagePromptStorage(BasePromptStorage[ImagePrompt]):
 
         async def read_file(file_path: Path) -> ImagePrompt:
             async with aiofiles.open(file_path, "rb") as f:
-                data = await f.read()
-            return ImagePrompt(image_data=data, filename=file_path.name)
+                return ImagePrompt(image_data=await f.read(), filename=file_path.name)
 
-        image_datas = await asyncio.gather(*(read_file(fp) for fp in selected_file_paths))
-        return image_datas
+        async with self._semaphor:
+            start_idx = 0
+            end_idx = min(DiskImagePromptStorage._FILE_CHUNK, len(selected_file_paths))
+            image_datas: list[ImagePrompt] = []
+            proceed_load: bool = True
+            while proceed_load:
+                if end_idx >= len(selected_file_paths):
+                    end_idx = len(selected_file_paths)
+                    proceed_load = False
+                chunk_image_datas = await asyncio.gather(
+                    *(read_file(fp) for fp in selected_file_paths[start_idx:end_idx])
+                )
+                image_datas.extend(chunk_image_datas)
+                start_idx = end_idx
+                end_idx += DiskImagePromptStorage._FILE_CHUNK
+            return image_datas
 
     def add(self, *, prompts: list[ImagePrompt]) -> None:
         raise NotImplementedError()
@@ -98,7 +114,7 @@ class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
 
     def get_batch(self, *, batch_size: int) -> list[ImagePrompt]:
         if len(self._image_prompts) < self._max_prompt_cnt:
-            return rd.sample(self._image_prompts, batch_size)
+            return rd.sample(self._image_prompts, min(len(self._image_prompts), batch_size))
         return list(self._image_prompts)
 
     def add(self, *, prompts: list[ImagePrompt]) -> None:

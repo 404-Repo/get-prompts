@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
-from config import config
 from fastapi import Depends, FastAPI
 from prompt_manager.image_prompt_endpoints import image_prompt_router
 from prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
@@ -14,6 +13,7 @@ from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK
 from utils.metagraph_manager import MetagraphManager
 
+from main.config import config
 from main.dependencies import get_metagraph_manager, verify_api_key
 from main.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException
 from main.schemas.metagraph_data import MetagraphData

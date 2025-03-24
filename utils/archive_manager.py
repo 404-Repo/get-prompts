@@ -1,8 +1,11 @@
 import asyncio
 import zipfile
 from abc import ABC, abstractmethod
+from asyncio import Semaphore
 from collections.abc import Iterable
 from io import BytesIO
+
+from main.config import config
 
 from utils.schemas.image_prompt import ImagePrompt
 
@@ -21,6 +24,8 @@ class BaseArchiveManager(ABC):
 
 
 class ZipArchiveManager(BaseArchiveManager):
+    _SEMAPHORE: Semaphore = asyncio.Semaphore(config.max_concurrent_image_tasks)
+
     @staticmethod
     async def compress(*, image_prompts: Iterable[ImagePrompt]) -> BytesIO:
         def write_zip() -> BytesIO:
@@ -31,8 +36,9 @@ class ZipArchiveManager(BaseArchiveManager):
             buffer.seek(0)
             return buffer
 
-        zip_buffer = await asyncio.to_thread(write_zip)
-        return zip_buffer
+        async with ZipArchiveManager._SEMAPHORE:
+            zip_buffer = await asyncio.to_thread(write_zip)
+            return zip_buffer
 
     @staticmethod
     async def decompress(*, zip_data: BytesIO) -> list[ImagePrompt]:
@@ -54,4 +60,5 @@ class ZipArchiveManager(BaseArchiveManager):
                         print(f"Failed to extract {file_name} from archive: {e}")
             return prompts
 
-        return await asyncio.to_thread(extract_images_sync, zip_data)
+        async with ZipArchiveManager._SEMAPHORE:
+            return await asyncio.to_thread(extract_images_sync, zip_data)

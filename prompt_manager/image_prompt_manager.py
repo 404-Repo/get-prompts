@@ -37,7 +37,9 @@ class ImagePromptManager(BasePromptManager[ImagePromptBatch]):
 image_prompt_manager = ImagePromptManager(
     batch_size=config.image_prompt_batch_size,
     default_image_storage=DiskImagePromptStorage(
-        resources_dir=Path(config.default_image_prompt_dir), min_prompt_cnt=config.image_prompt_batch_size
+        resources_dir=Path(config.default_image_prompt_dir),
+        min_prompt_cnt=config.image_prompt_batch_size,
+        max_concurrent_tasks_cnt=config.max_concurrent_image_tasks,
     ),
     submitted_image_storage=InMemoryImagePromptStorage(
         max_prompt_cnt=config.submitted_image_prompt_buffer_size,

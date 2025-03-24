@@ -47,6 +47,12 @@ def read_config() -> bt.config:
         help="Minimal required stake to set weights.",
         default=1,
     )
+    parser.add_argument(
+        "--max_concurrent_image_tasks",
+        type=int,
+        help="Maximal concurrent image tasks. " "In order to not exceed RAM limit when validators download images.",
+        default=15,
+    )
 
     return bt.config(parser)
 
