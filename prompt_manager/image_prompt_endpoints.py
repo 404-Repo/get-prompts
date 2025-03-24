@@ -3,15 +3,12 @@ from datetime import datetime
 from io import BytesIO
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
-from main.dependencies import get_metagraph_manager, verify_api_key
-from main.schemas.metagraph_data import MetagraphData
+from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
+from main.dependencies import get_metagraph_manager
 from starlette.responses import Response, StreamingResponse
-from utils.archive_manager import ZipArchiveManager
 from utils.metagraph_manager import MetagraphManager
 
 from prompt_manager.image_prompt_manager import image_prompt_manager
-from prompt_manager.schemas.prompt_batch import ImagePromptBatch
 
 
 image_prompt_router = APIRouter(tags=["Image Prompts"])
@@ -19,22 +16,20 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 _CHUNK_SIZE: int = 1024 * 1024
 
 
-@image_prompt_router.get(
+@image_prompt_router.post(
     path="/download",
     summary="Download batch of image prompts.",
 )
 async def download_prompt_batch(
-    request: MetagraphData,
+    # request: MetagraphData,
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> StreamingResponse:
-    metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
+    # metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
     filename = f"{datetime.now().timestamp()}.zip"
     print(f"Creating batch for {filename}")
-    batch = await image_prompt_manager.get_batch()
+    # batch = await image_prompt_manager.get_batch()
     print(f"Batch created for {filename}")
     print(f"Compressing {filename}")
-    zip_data = await ZipArchiveManager.compress(image_prompts=batch.image_prompts)
-    print(f"Compressed {filename} {zip_data.getbuffer().nbytes}")
 
     async def file_stream(zip_data: BytesIO) -> AsyncGenerator[bytes, Any]:
         try:
@@ -58,18 +53,25 @@ async def download_prompt_batch(
     summary="Submit batch of image prompts in zip format.",
 )
 async def upload_file(
-    background_tasks: BackgroundTasks, file: UploadFile, api_key: str = Depends(verify_api_key)  # noqa: B008
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(..., max_length=500 * 1024 * 1024),  # api_key: str = Depends(verify_api_key)  # noqa: B008
 ) -> Response:
-    # todo Check that it is a zip archive
-    zip_data = BytesIO()
-    while chunk := await file.read(_CHUNK_SIZE):
-        zip_data.write(chunk)
-    zip_data.seek(0)
-
-    async def add_images(data: BytesIO) -> None:
-        image_prompts = await ZipArchiveManager.decompress(zip_data=data)
-        image_prompt_manager.submit(image_batch=ImagePromptBatch(image_prompts=image_prompts))
-        data.close()
-
-    background_tasks.add_task(add_images, zip_data)
+    # # todo Check that it is a zip archive
+    # print(f"Uploading file {file.filename}")
+    # zip_data = BytesIO()
+    # while chunk := await file.read(_CHUNK_SIZE):
+    #     zip_data.write(chunk)
+    # zip_data.seek(0)
+    # print(f"File successfully uploaded in memory")
+    #
+    # async def add_images(data: BytesIO) -> None:
+    #     try:
+    #         print(f"Extracting images from {file.filename}")
+    #         print(f"{len(image_prompts)} images were extracted.")
+    #         image_prompt_manager.submit(image_batch=ImagePromptBatch(image_prompts=image_prompts))
+    #         print(f"{len(image_prompt_manager._submitted_image_storage._image_prompts)} now in RAM")
+    #     finally:
+    #         data.close()
+    #
+    # background_tasks.add_task(add_images, zip_data)
     return Response(status_code=200)

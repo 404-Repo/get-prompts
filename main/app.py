@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -25,6 +26,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     yield
 
 
+# Configure the logging module to show internal logs
+logging.basicConfig(level=logging.DEBUG)
+
+# Get the Uvicorn logger and set the log level to DEBUG
+uvicorn_logger = logging.getLogger("uvicorn")
+uvicorn_logger.setLevel(logging.DEBUG)
+
+
 app = FastAPI(lifespan=lifespan)
 app.include_router(image_prompt_router, prefix="/images")
 app.include_router(text_prompt_router, prefix="/texts")
@@ -50,7 +59,7 @@ async def submit_strings(batch: TextPromptBatch, api_key: str = Depends(verify_a
 
 
 # todo: remove because deprecated
-@app.get("/get", response_model=TextPromptBatch)
+@app.post("/get", response_model=TextPromptBatch)
 async def get_strings(
     request: MetagraphData,
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
@@ -61,4 +70,4 @@ async def get_strings(
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=config.port)  # noqa: S104
+    uvicorn.run(app, host="0.0.0.0", port=config.port, log_level="debug", access_log=True)  # noqa: S104
