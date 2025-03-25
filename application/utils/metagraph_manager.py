@@ -3,8 +3,6 @@ import copy
 import logging
 
 import bittensor as bt
-from bittensor import AsyncSubtensor
-from bittensor.core.metagraph import AsyncMetagraph
 from bittensor_wallet import Keypair
 
 from application.exceptions import InvalidSignatureException
@@ -15,14 +13,13 @@ logger = logging.getLogger("uvicorn")
 
 class MetagraphManager:
     def __init__(self, config: bt.config) -> None:
-        logger.info("Metagraph init")
+        self.subtensor = bt.async_subtensor(config=config)
+        self.metagraph = bt.core.metagraph.AsyncMetagraph(netuid=17, sync=False, subtensor=self.subtensor)
         self.config = copy.deepcopy(config)
-        self.subtensor = AsyncSubtensor(config=self.config)
-        self.metagraph = AsyncMetagraph(netuid=self.config.netuid, network=self.subtensor.network, sync=False)
-        logger.info("Metagraph init done")
 
     async def sync(self) -> None:
-        await self.metagraph.sync(subtensor=self.subtensor)
+        async with self.subtensor:
+            await self.metagraph.sync()
 
     def verify_signature(self, hotkey: str, nonce: int, signature: str) -> None:
         uid = self._get_neuron_uid(hotkey)
