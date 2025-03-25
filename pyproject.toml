@@ -17,6 +17,7 @@ python-multipart = "^0.0.20"
 msgpack = "^1.1.0"
 psutil = "^7.0.0"
 apscheduler = "^3.11.0"
+faker = "^37.1.0"
 
 [tool.poetry.group.dev.dependencies]
 poetry = { version = "2.1.1" }
@@ -70,10 +71,10 @@ select = [
     "ASYNC", # flake8-async
     "PTH", # flake8-use-pathlib
 ]
+ignore = ["S101"]
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
-
 # Exclude directories
 exclude = [
     ".*",
@@ -90,7 +91,7 @@ combine-as-imports = true
 lines-after-imports = 2
 
 [tool.bandit]
-skips = ["B104", "B311"]
+skips = ["B104", "B311", "B101"]
 exclude_dirs = [
     "./.*/**",
     "./tests/**",

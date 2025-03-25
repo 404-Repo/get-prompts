@@ -9,7 +9,7 @@ from main.cron.base_cron_job import BaseCronJob
 _logger = logging.getLogger("uvicorn")
 
 
-class CheckRAMCronJob(BaseCronJob):
+class CheckRAMJob(BaseCronJob):
     """The cron job class is responsible for verifying the database connection."""
 
     @classmethod

@@ -32,14 +32,23 @@ class InMemoryTextPromptStorage(BasePromptStorage[str]):
         logger.info("In memory text storage init")
         self._max_prompt_cnt = max_text_cnt
         self._prompts: deque[str] = deque(maxlen=self._max_prompt_cnt)
-        self._prompt_set = set()
+        self._prompt_set: set[str] = set()
         if file_path is not None:
             if not file_path.exists():
                 raise FileWithTextDataDoesntExist(f"File {file_path} does not exist.")
             with file_path.open("r") as f:
-                self._prompts = deque(f.readlines())
-                self._prompt_set = set(self._prompts)
+                lines = [line.replace("\n", "") for line in f.readlines()]
+                for line in lines:
+                    if line not in self._prompt_set:
+                        self._prompts.append(line)
+                        self._prompt_set.add(line)
+                    if len(self._prompts) == self._max_prompt_cnt:
+                        break
         logger.info(f"{len(self._prompts)} prompts loaded")
+
+    @property
+    def prompts_cnt(self) -> int:
+        return len(self._prompts)
 
     def get_batch(self, *, batch_size: int) -> list[str]:
         return rd.sample(list(self._prompts), min(len(self._prompts), batch_size))

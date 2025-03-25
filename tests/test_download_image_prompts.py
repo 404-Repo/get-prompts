@@ -8,7 +8,7 @@ import msgpack
 
 
 async def unpack_message_pack_stream(url: str) -> None:
-    dir_name = f"{randint(0,10000)}"
+    dir_name = f"{randint(0,10000)}"  # noqa: S311
 
     async with httpx.AsyncClient() as client:
         unpacker = msgpack.Unpacker(raw=False)
@@ -35,7 +35,7 @@ async def main() -> None:
         url = "http://localhost:8093/images/download"
 
         # Create a list of tasks for concurrent fetching
-        tasks = [unpack_message_pack_stream(url) for _ in range(20)]
+        tasks = [unpack_message_pack_stream(url) for _ in range(100)]
 
         # Await all tasks to run concurrently
         await asyncio.gather(*tasks)

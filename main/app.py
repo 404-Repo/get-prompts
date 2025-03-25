@@ -17,14 +17,14 @@ from utils.metagraph_manager import MetagraphManager
 from utils.schemas.metagraph_data import MetagraphData
 
 from main.config import config
-from main.cron.check_ram_job import CheckRAMCronJob
+from main.cron.check_ram_job import CheckRAMJob
 from main.cron.cron_scheduler import CronScheduler
-from main.cron.sync_metagraph_job import SyncMetagraphCronJob
+from main.cron.sync_metagraph_job import SyncMetagraphJob
 from main.dependencies import get_metagraph_manager, verify_api_key
 from main.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException, NotEnoughImages
 
 
-logger = logging.getLogger("uvicorn")
+_logger = logging.getLogger("uvicorn")
 
 
 @asynccontextmanager
@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     next_run_time = datetime.now(UTC) + timedelta(seconds=1)
 
     CronScheduler.add_job(
-        job_type=CheckRAMCronJob,
+        job_type=CheckRAMJob,
         id="check_ram_cron_job",
         trigger="interval",
         minutes=1,
@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
         misfire_grace_time=60,
     )
     CronScheduler.add_job(
-        job_type=SyncMetagraphCronJob,
+        job_type=SyncMetagraphJob,
         id="sync_metagraph_cron_job",
         trigger="interval",
         minutes=30,
@@ -48,9 +48,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
         misfire_grace_time=60,
     )
     CronScheduler.start()
+
+    _logger.info(config)
     yield
     CronScheduler.shutdown()
-    yield
 
 
 app = FastAPI(lifespan=lifespan)

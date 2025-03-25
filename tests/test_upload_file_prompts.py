@@ -7,9 +7,15 @@ import httpx
 import msgpack
 
 
+def get_file_cnt(file_dir: Path) -> int:
+    return sum(1 for f in file_dir.iterdir())
+
+
 async def send_message_pack(file_dir: Path) -> None:
     async with httpx.AsyncClient() as client:
         files_data = []
+        file_cnt = sum(1 for f in file_dir.iterdir())
+        print(f"{file_dir} contains {file_cnt} files")
 
         for file in file_dir.iterdir():
             async with aiofiles.open(file, "rb") as f:
@@ -28,8 +34,8 @@ async def send_message_pack(file_dir: Path) -> None:
 
 async def main() -> None:
     async with httpx.AsyncClient():
-        dirs = random.sample(list(Path("temp").iterdir()), 10)
-        tasks = [send_message_pack(dir) for dir in dirs]
+        dirs = [dir for dir in Path("temp").iterdir() if get_file_cnt(dir) > 1000]
+        tasks = [send_message_pack(dir) for dir in random.sample(dirs, 10)]
 
         # Wait for all tasks to complete
         await asyncio.gather(*tasks)

@@ -10,7 +10,6 @@ from main.exceptions import InvalidSignatureException
 
 
 logger = logging.getLogger("uvicorn")
-logging.basicConfig(level=logging.INFO)
 
 
 class MetagraphManager:
