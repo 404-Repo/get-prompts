@@ -19,7 +19,9 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 
 @image_prompt_router.get(
     path="/download",
-    summary="Download batch of image prompts in messagepack format",
+    summary="Download batch of image prompts in messagepack format.",
+    description="Download batch of image prompts in messagepack format. "
+    "Each message is sent in format {'normalized_prompt': '...', 'data': '...'}",
 )
 async def download_image_prompt_batch(
     request: MetagraphData,
@@ -41,6 +43,9 @@ async def download_image_prompt_batch(
 @image_prompt_router.post(
     path="/submit",
     summary="Submit batch of image prompts in message pack format.",
+    description="Submit batch of image prompts in message pack format. "
+    "Messages should be sent as bytes stream"
+    " in format {'normalized_prompt': '...', 'data': '...'}",
 )
 async def upload_image_prompt_batch(
     file: UploadFile,
