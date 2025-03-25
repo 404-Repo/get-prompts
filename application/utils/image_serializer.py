@@ -1,12 +1,18 @@
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
+from io import BytesIO
 
 import msgpack
 from fastapi import UploadFile
 
 from application.config import config
+from application.utils.prompt_storage import InMemoryImagePromptStorage, image_prompt_storage
 from application.utils.schemas.image_prompt import ImagePrompt
+
+
+_logger = logging.getLogger("uvicorn")
 
 
 class BaseImagePromptSerializer(ABC):
@@ -16,47 +22,59 @@ class BaseImagePromptSerializer(ABC):
         pass
 
     @abstractmethod
-    async def deserialize(self, *, file: UploadFile) -> list[ImagePrompt]:
+    async def deserialize(self, *, file: UploadFile) -> None:
         pass
 
 
 class MessagePackImagePromptSerializer(BaseImagePromptSerializer):
 
-    def __init__(self, *, chunk_size: int = 1024 * 1024) -> None:
+    def __init__(self, *, image_prompt_storage: InMemoryImagePromptStorage, chunk_size: int = 1024 * 1024) -> None:
         self._chunk_size = chunk_size
+        self._image_prompt_storage = image_prompt_storage
 
     async def serialize(self, *, image_prompts: list[ImagePrompt]) -> AsyncGenerator[bytes, None]:  # type: ignore
-        data: list[dict[str, str | bytes]] = []
+        data_stream = BytesIO()
         for prompt in image_prompts:
-            data.append({"normalized_prompt": prompt.normalized_prompt, "data": prompt.image_data})
-        packed_data = msgpack.packb(data)
+            data_stream.write(
+                msgpack.packb(
+                    {"normalized_prompt": prompt.normalized_prompt, "data": prompt.image_data},
+                    use_bin_type=True,
+                )
+            )
+        data_stream.seek(0)
 
-        for i in range(0, len(packed_data), self._chunk_size):
+        while True:
+            chunk = data_stream.read(self._chunk_size)
+            if not chunk:
+                break
             await asyncio.sleep(0)
-            yield packed_data[i : i + self._chunk_size]
+            yield chunk
 
-    async def deserialize(self, *, file: UploadFile) -> list[ImagePrompt]:
+    async def deserialize(self, *, file: UploadFile) -> None:
         unpacker = msgpack.Unpacker(raw=False)
-        image_prompts: list[ImagePrompt] = []
+        total_len = 0
         while True:
             chunk = await file.read(self._chunk_size)
             if not chunk:
                 break
 
             unpacker.feed(chunk)
+            image_prompts: list[ImagePrompt] = []
             for data in unpacker:
-                for item in data:
-                    normalized_prompt = item["normalized_prompt"]
-                    image_data = item["data"]
-                    image_prompts.append(
-                        ImagePrompt(
-                            normalized_prompt=normalized_prompt,
-                            image_data=image_data,
-                        )
+                normalized_prompt = data["normalized_prompt"]
+                image_data = data["data"]
+                image_prompts.append(
+                    ImagePrompt(
+                        normalized_prompt=normalized_prompt,
+                        image_data=image_data,
                     )
-        return image_prompts
+                )
+            if image_prompts:
+                total_len += len(image_prompts)
+                self._image_prompt_storage.add(prompts=image_prompts)
+        _logger.info(f"Total length: {total_len}")
 
 
 image_prompt_serializer = MessagePackImagePromptSerializer(
-    chunk_size=config.image_prompt_chunk_size,
+    chunk_size=config.image_prompt_chunk_size, image_prompt_storage=image_prompt_storage
 )

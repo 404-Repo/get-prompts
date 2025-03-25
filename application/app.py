@@ -13,7 +13,7 @@ from starlette.status import HTTP_200_OK
 from application.api.image_prompt_endpoints import image_prompt_router
 from application.api.text_prompt_endpoints import text_prompt_router
 from application.config import config
-from application.cron import sync_metagraph_cron, sync_ram_cron
+from application.cron import sync_metagraph_cron
 from application.dependencies import get_metagraph_manager, verify_api_key
 from application.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException, NotEnoughImages
 from application.prompt_manager.text_prompt_manager import text_prompt_manager
@@ -28,7 +28,6 @@ _logger = logging.getLogger("uvicorn")
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     _logger.info(config)
     asyncio.create_task(sync_metagraph_cron())
-    asyncio.create_task(sync_ram_cron())
     yield
 
 

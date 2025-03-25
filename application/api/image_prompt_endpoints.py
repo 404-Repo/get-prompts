@@ -1,13 +1,14 @@
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
+from fastapi import APIRouter, Depends, UploadFile
 from starlette.responses import Response, StreamingResponse
 
-from application.dependencies import get_metagraph_manager
+from application.dependencies import get_metagraph_manager, verify_api_key
 from application.prompt_manager.image_prompt_manager import image_prompt_manager
 from application.utils.image_serializer import image_prompt_serializer
 from application.utils.metagraph_manager import MetagraphManager
+from application.utils.schemas.metagraph_data import MetagraphData
 
 
 _logger = logging.getLogger("uvicorn")
@@ -15,18 +16,16 @@ _logger = logging.getLogger("uvicorn")
 
 image_prompt_router = APIRouter(tags=["Image Prompts"])
 
-_CHUNK_SIZE: int = 1024 * 1024
-
 
 @image_prompt_router.get(
     path="/download",
-    summary="Download batch of image prompts.",
+    summary="Download batch of image prompts in messagepack format",
 )
-async def download_prompt_batch(
-    # request: MetagraphData,
+async def download_image_prompt_batch(
+    request: MetagraphData,
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> StreamingResponse:
-    # metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
+    metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
     normalized_prompt = f"{datetime.now().timestamp()}.msgpack"
     batch = await image_prompt_manager.get_batch()
 
@@ -41,16 +40,12 @@ async def download_prompt_batch(
 
 @image_prompt_router.post(
     path="/submit",
-    summary="Submit batch of image prompts in zip format.",
+    summary="Submit batch of image prompts in message pack format.",
 )
-async def upload_file(
-    background_tasks: BackgroundTasks,
+async def upload_image_prompt_batch(
     file: UploadFile,
-    # api_key: str = Depends(verify_api_key),  # noqa: B008
+    api_key: str = Depends(verify_api_key),  # noqa: B008
 ) -> Response:
-    _logger.info(f"Uploading {file.filename} to memory.")
-    image_prompts = await image_prompt_serializer.deserialize(file=file)
+    await image_prompt_serializer.deserialize(file=file)
     await file.close()
-    _logger.info(f"{len(image_prompts)} image prompts were uploaded.")
-    background_tasks.add_task(image_prompt_manager.submit, batch=image_prompts)
     return Response(status_code=200)

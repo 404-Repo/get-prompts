@@ -1,8 +1,6 @@
-from pathlib import Path
-
 from application.config import config
 from application.prompt_manager.base_prompt_manager import BasePromptManager
-from application.utils.prompt_storage import InMemoryImagePromptStorage
+from application.utils.prompt_storage import InMemoryImagePromptStorage, image_prompt_storage
 from application.utils.schemas.image_prompt import ImagePrompt
 
 
@@ -25,9 +23,5 @@ class ImagePromptManager(BasePromptManager[ImagePrompt]):
 
 
 image_prompt_manager = ImagePromptManager(
-    batch_size=config.image_prompt_batch_size,
-    prompt_storage=InMemoryImagePromptStorage(
-        default_resources_dir=Path(config.default_image_prompt_dir),
-        max_prompt_cnt=config.submitted_image_prompt_buffer_size,
-    ),
+    batch_size=config.image_prompt_batch_size, prompt_storage=image_prompt_storage
 )

@@ -5,13 +5,14 @@ from collections import deque
 from pathlib import Path
 from typing import Generic, TypeVar
 
+from application.config import config
 from application.exceptions import FileWithTextDataDoesntExist, NoDefaultImagePrompts
 from application.utils.schemas.image_prompt import ImagePrompt
 
 
 PromptT = TypeVar("PromptT")
 
-logger = logging.getLogger("uvicorn")
+_logger = logging.getLogger("uvicorn")
 
 
 class BasePromptStorage(ABC, Generic[PromptT]):
@@ -48,7 +49,7 @@ class InMemoryTextPromptStorage(BasePromptStorage[str]):
         self._prompts.extend(prompts)
         self._all_prompts.update(prompts)
         new_prompt_cnt = len(self._all_prompts) - prev_prompt_cnt
-        logger.info(f"{len(prompts)} text prompts were submitted. New prompts: {new_prompt_cnt}.")
+        _logger.info(f"{len(prompts)} text prompts were submitted. New prompts: {new_prompt_cnt}.")
 
 
 class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
@@ -61,7 +62,7 @@ class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
                 self._image_prompts.append(ImagePrompt(image_data=f.read()))
             if len(self._image_prompts) == max_prompt_cnt:
                 break
-        logger.info(f"In memory image storage was initialized by {len(self._image_prompts)} default prompts.")
+        _logger.info(f"In memory image storage was initialized by {len(self._image_prompts)} default prompts.")
 
     @property
     def prompt_cnt(self) -> int:
@@ -72,4 +73,11 @@ class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
 
     # todo Stream addition?
     def add(self, *, prompts: list[ImagePrompt]) -> None:
+        _logger.info(f"{len(prompts)} image prompts were submitted.")
         self._image_prompts.extend(prompts)
+
+
+image_prompt_storage = InMemoryImagePromptStorage(
+    default_resources_dir=Path(config.default_image_prompt_dir),
+    max_prompt_cnt=config.submitted_image_prompt_buffer_size,
+)
