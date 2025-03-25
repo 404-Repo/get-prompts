@@ -21,7 +21,7 @@ cat <<EOF > receiver.config.js
 module.exports = {
   apps : [{
     name: 'prompts_receiver',
-    script: 'main/app.py',
+    script: 'application/app.py',
     interpreter: '${CONDA_INTERPRETER_PATH}',
     args: '--port 8093'
   }]
