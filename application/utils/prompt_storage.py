@@ -73,7 +73,6 @@ class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
 
     # todo Stream addition?
     def add(self, *, prompts: list[ImagePrompt]) -> None:
-        _logger.info(f"{len(prompts)} image prompts were submitted.")
         self._image_prompts.extend(prompts)
 
 

@@ -72,7 +72,6 @@ class MessagePackImagePromptSerializer(BaseImagePromptSerializer):
             if image_prompts:
                 total_len += len(image_prompts)
                 self._image_prompt_storage.add(prompts=image_prompts)
-        _logger.info(f"Total length: {total_len}")
 
 
 image_prompt_serializer = MessagePackImagePromptSerializer(
