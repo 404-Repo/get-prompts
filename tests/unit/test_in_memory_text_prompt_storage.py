@@ -38,6 +38,6 @@ class TestInMemoryTextPromptStorage:
         self, default_prompts_file: Path = Path("resources/texts/default_prompts.txt")
     ) -> InMemoryTextPromptStorage:
         return InMemoryTextPromptStorage(
-            max_text_cnt=TestInMemoryTextPromptStorage._MAX_PROMPT_CNT,
-            file_path=default_prompts_file,
+            max_prompt_cnt=TestInMemoryTextPromptStorage._MAX_PROMPT_CNT,
+            default_prompt_path=default_prompts_file,
         )

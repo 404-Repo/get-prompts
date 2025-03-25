@@ -6,7 +6,6 @@ from starlette.responses import Response, StreamingResponse
 
 from application.dependencies import get_metagraph_manager
 from application.prompt_manager.image_prompt_manager import image_prompt_manager
-from application.prompt_manager.schemas.prompt_batch import ImagePromptBatch
 from application.utils.image_serializer import image_prompt_serializer
 from application.utils.metagraph_manager import MetagraphManager
 
@@ -28,15 +27,15 @@ async def download_prompt_batch(
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> StreamingResponse:
     # metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
-    filename = f"{datetime.now().timestamp()}.msgpack"
+    normalized_prompt = f"{datetime.now().timestamp()}.msgpack"
     batch = await image_prompt_manager.get_batch()
 
-    _logger.info(f"Returning {filename}...")
+    _logger.info(f"Returning {normalized_prompt}...")
 
     return StreamingResponse(
-        image_prompt_serializer.serialize(image_prompts=batch.image_prompts),
+        image_prompt_serializer.serialize(image_prompts=batch),
         media_type="application/x-msgpack",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={"Content-Disposition": f"attachment; normalized_prompt={normalized_prompt}"},
     )
 
 
@@ -53,5 +52,5 @@ async def upload_file(
     image_prompts = await image_prompt_serializer.deserialize(file=file)
     await file.close()
     _logger.info(f"{len(image_prompts)} image prompts were uploaded.")
-    background_tasks.add_task(image_prompt_manager.submit, image_batch=ImagePromptBatch(image_prompts=image_prompts))
+    background_tasks.add_task(image_prompt_manager.submit, batch=image_prompts)
     return Response(status_code=200)

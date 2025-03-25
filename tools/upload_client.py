@@ -3,8 +3,12 @@ import random
 from pathlib import Path
 
 import aiofiles  # type: ignore
+import faker
 import httpx
 import msgpack
+
+
+fake = faker.Faker()
 
 
 def get_file_cnt(file_dir: Path) -> int:
@@ -20,7 +24,7 @@ async def send_message_pack(file_dir: Path) -> None:
         for file in file_dir.iterdir():
             async with aiofiles.open(file, "rb") as f:
                 file_data = await f.read()
-                files_data.append({"filename": file.name, "data": file_data})
+                files_data.append({"normalized_prompt": fake.sentence(), "data": file_data})
 
         packed_data = msgpack.packb(files_data, use_bin_type=True)
         files = {"file": ("packed_files.msgpack", packed_data, "application/octet-stream")}

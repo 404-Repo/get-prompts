@@ -15,7 +15,6 @@ from application.config import config
 from application.cron import sync_metagraph_cron, sync_ram_cron
 from application.dependencies import get_metagraph_manager, verify_api_key
 from application.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException, NotEnoughImages
-from application.prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
 from application.prompt_manager.text_prompt_manager import text_prompt_manager
 from application.utils.metagraph_manager import MetagraphManager
 from application.utils.schemas.metagraph_data import MetagraphData
@@ -55,17 +54,17 @@ async def custom_exception_handler(request: Request, exc: BaseException) -> JSON
 
 # todo: remove because deprecated
 @app.post("/submit", status_code=HTTP_200_OK, response_class=Response)
-async def submit_strings(batch: TextPromptBatch, api_key: str = Depends(verify_api_key)) -> Response:  # noqa: B008
-    text_prompt_manager.submit(batch=TextPromptBatch(prompts=batch.prompts))
+async def submit_strings(batch: list[str], api_key: str = Depends(verify_api_key)) -> Response:  # noqa: B008
+    text_prompt_manager.submit(batch=batch)
     return Response()
 
 
 # todo: remove because deprecated
-@app.post("/get", response_model=TextPromptBatch)
+@app.post("/get")
 async def get_strings(
     request: MetagraphData,
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
-) -> BasePromptBatch:
+) -> list[str]:
     metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
     batch = text_prompt_manager.get_batch()
     return batch

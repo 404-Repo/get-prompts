@@ -28,7 +28,9 @@ class MessagePackImagePromptSerializer(BaseImagePromptSerializer):
     # normalized_prompt
     async def serialize(self, *, image_prompts: list[ImagePrompt]) -> AsyncGenerator[bytes, None]:  # type: ignore
         for prompt in image_prompts:
-            packed_data = msgpack.packb({"filename": prompt.filename, "data": prompt.image_data}, use_bin_type=True)
+            packed_data = msgpack.packb(
+                {"normalized_prompt": prompt.normalized_prompt, "data": prompt.image_data}, use_bin_type=True
+            )
 
             for i in range(0, len(packed_data), self._chunk_size):
                 await asyncio.sleep(0)
@@ -45,11 +47,11 @@ class MessagePackImagePromptSerializer(BaseImagePromptSerializer):
             unpacker.feed(chunk)
             for data in unpacker:
                 for item in data:
-                    filename = item["filename"]
+                    normalized_prompt = item["normalized_prompt"]
                     image_data = item["data"]
                     image_prompts.append(
                         ImagePrompt(
-                            filename=filename,
+                            normalized_prompt=normalized_prompt,
                             image_data=image_data,
                         )
                     )

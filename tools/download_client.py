@@ -19,12 +19,12 @@ async def unpack_message_pack_stream(url: str) -> None:
             async for chunk in response.aiter_bytes():
                 unpacker.feed(chunk)
                 for data in unpacker:
-                    filename = data["filename"]
+                    normalized_prompt = data["normalized_prompt"]
                     data = data["data"]
-                    # Save the image data to disk (ensure that filenames are safe)
+                    # Save the image data to disk (ensure that normalized_prompts are safe)
                     dir_path = Path("temp") / dir_name
                     dir_path.mkdir(parents=True, exist_ok=True)
-                    file_path = dir_path / filename
+                    file_path = dir_path / f"{normalized_prompt}.txt"
 
                     async with aiofiles.open(file_path, "wb") as f:
                         await f.write(data)

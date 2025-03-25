@@ -27,7 +27,7 @@ class TestInMemoryImagePromptStorage:
         for _ in range(10):
             new_prompts = [
                 ImagePrompt(
-                    filename=fake.file_name(),
+                    normalized_prompt=fake.sentence(),
                     image_data=bytes.fromhex(TestInMemoryImagePromptStorage._random_hex_string(32)),
                 )
                 for _ in range(
@@ -49,7 +49,7 @@ class TestInMemoryImagePromptStorage:
 
         new_prompts = [
             ImagePrompt(
-                filename=f"temp_{idx}.webp",
+                normalized_prompt=f"temp_{idx}.webp",
                 image_data=bytes.fromhex(TestInMemoryImagePromptStorage._random_hex_string(32)),
             )
             for idx in range(TestInMemoryImagePromptStorage._MAX_PROMPT_CNT)
@@ -57,7 +57,7 @@ class TestInMemoryImagePromptStorage:
         storage.add(prompts=new_prompts)
         prompts = storage.get_batch(batch_size=TestInMemoryImagePromptStorage._MAX_PROMPT_CNT)
         for prompt in prompts:
-            assert prompt.filename.startswith("temp_")
+            assert prompt.normalized_prompt.startswith("temp_")
 
     def _get_storage(self, default_prompts_dir: Path = Path("resources/images/default")) -> InMemoryImagePromptStorage:
         return InMemoryImagePromptStorage(

@@ -1,12 +1,11 @@
 import logging
-import os
 import random as rd
 from abc import ABC, abstractmethod
 from collections import deque
 from pathlib import Path
 from typing import Generic, TypeVar
 
-from application.exceptions import FileWithTextDataDoesntExist, NoDefaultImagePrompts, NotEnoughImages
+from application.exceptions import FileWithTextDataDoesntExist, NoDefaultImagePrompts
 from application.utils.schemas.image_prompt import ImagePrompt
 
 
@@ -27,23 +26,15 @@ class BasePromptStorage(ABC, Generic[PromptT]):
 
 
 class InMemoryTextPromptStorage(BasePromptStorage[str]):
-    def __init__(self, *, max_text_cnt: int, file_path: Path | None = None) -> None:
-        logger.info("In memory text storage init")
-        self._max_prompt_cnt = max_text_cnt
-        self._prompts: deque[str] = deque(maxlen=self._max_prompt_cnt)
-        self._prompt_set: set[str] = set()
-        if file_path is not None:
-            if not file_path.exists():
-                raise FileWithTextDataDoesntExist(f"File {file_path} does not exist.")
-            with file_path.open("r") as f:
-                lines = [line.replace("\n", "") for line in f.readlines()]
-                for line in lines:
-                    if line not in self._prompt_set:
-                        self._prompts.append(line)
-                        self._prompt_set.add(line)
-                    if len(self._prompts) == self._max_prompt_cnt:
-                        break
-        logger.info(f"{len(self._prompts)} prompts loaded")
+    def __init__(self, *, max_prompt_cnt: int, default_prompt_path: Path) -> None:
+        self._prompts: deque[str] = deque(maxlen=max_prompt_cnt)
+        self._all_prompts: set[str] = set()
+        if not default_prompt_path.exists():
+            raise FileWithTextDataDoesntExist(f"File {default_prompt_path} does not exist.")
+        with default_prompt_path.open("r") as f:
+            lines = [line.replace("\n", "") for line in f.readlines()]
+            self._all_prompts.update(lines)
+            self._prompts.extend(lines)
 
     @property
     def prompt_cnt(self) -> int:
@@ -53,40 +44,21 @@ class InMemoryTextPromptStorage(BasePromptStorage[str]):
         return rd.sample(list(self._prompts), min(len(self._prompts), batch_size))
 
     def add(self, *, prompts: list[str]) -> None:
-        unique_prompts = [d for d in prompts if d not in self._prompt_set]
-        unique_prompt_cnt = len(unique_prompts)
-        total_prompt_cnt = unique_prompt_cnt + len(self._prompts)
-        if total_prompt_cnt > self._max_prompt_cnt:
-            for _ in range(total_prompt_cnt - self._max_prompt_cnt):
-                prompt = self._prompts.popleft()
-                self._prompt_set.remove(prompt)
-                # add all known prompts.
-                # we guarantee that input is unique.
-                # known prompts after, known prompts before ---> can take in memory
-                #
-        self._prompts.extend(unique_prompts)
-        self._prompt_set.update(unique_prompts)
-        logger.info(f"{unique_prompt_cnt} image prompts submitted. " f"Total count of prompts {len(self._prompts)}.")
+        prev_prompt_cnt = len(self._all_prompts)
+        self._prompts.extend(prompts)
+        self._all_prompts.update(prompts)
+        new_prompt_cnt = len(self._all_prompts) - prev_prompt_cnt
+        logger.info(f"{len(prompts)} text prompts were submitted. New prompts: {new_prompt_cnt}.")
 
 
 class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
     def __init__(self, *, default_resources_dir: Path, max_prompt_cnt: int) -> None:
-        self._max_prompt_cnt = max_prompt_cnt
-        self._image_prompts: deque[ImagePrompt] = deque()
-        self._filenames: set[str] = set()
+        self._image_prompts: deque[ImagePrompt] = deque(maxlen=max_prompt_cnt)
         if not default_resources_dir.exists():
             raise NoDefaultImagePrompts(f"{default_resources_dir} does not exist.")
-        file_cnt = sum(1 for entry in os.scandir(default_resources_dir) if entry.is_file())
-        if file_cnt < max_prompt_cnt:
-            raise NoDefaultImagePrompts(
-                f"There are {file_cnt} default images available " f"that is less than needed amount {max_prompt_cnt}."
-            )
-        files = list(default_resources_dir.iterdir())
-        default_files = rd.sample(files, max_prompt_cnt)
-        for file in default_files:
+        for file in default_resources_dir.iterdir():
             with file.open("rb") as f:
-                self._filenames.add(file.name)
-                self._image_prompts.append(ImagePrompt(filename=file.name, image_data=f.read()))
+                self._image_prompts.append(ImagePrompt(image_data=f.read()))
         logger.info(f"In memory image storage was initialized by {len(self._image_prompts)} default prompts.")
 
     @property
@@ -94,21 +66,8 @@ class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
         return len(self._image_prompts)
 
     def get_batch(self, *, batch_size: int) -> list[ImagePrompt]:
-        if batch_size > len(self._image_prompts):
-            raise NotEnoughImages(f"{len(self._image_prompts)} images available but {batch_size} requested.")
-        return rd.sample(self._image_prompts, batch_size)
+        return rd.sample(self._image_prompts, min(len(self._image_prompts), batch_size))
 
     # todo Stream addition?
     def add(self, *, prompts: list[ImagePrompt]) -> None:
-        unique_prompts = [im for im in prompts if im.filename not in self._filenames]
-        unique_prompt_cnt = len(unique_prompts)
-        total_cnt = unique_prompt_cnt + len(self._image_prompts)
-        if total_cnt > self._max_prompt_cnt:
-            for _ in range(total_cnt - self._max_prompt_cnt):
-                im = self._image_prompts.popleft()
-                self._filenames.remove(im.filename)
-        self._image_prompts.extend(unique_prompts)
-        self._filenames.update([im.filename for im in unique_prompts])
-        logger.info(
-            f"{unique_prompt_cnt=} image prompts submitted. " f"Total count of prompts {len(self._image_prompts)}."
-        )
+        self._image_prompts.extend(prompts)
