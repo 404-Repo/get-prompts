@@ -1,7 +1,6 @@
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import uvicorn
@@ -13,9 +12,7 @@ from starlette.status import HTTP_200_OK
 from application.api.image_prompt_endpoints import image_prompt_router
 from application.api.text_prompt_endpoints import text_prompt_router
 from application.config import config
-from application.cron.check_ram_job import CheckRAMJob
-from application.cron.cron_scheduler import CronScheduler
-from application.cron.sync_metagraph_job import SyncMetagraphJob
+from application.cron import sync_metagraph_cron, sync_ram_cron
 from application.dependencies import get_metagraph_manager, verify_api_key
 from application.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException, NotEnoughImages
 from application.prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
@@ -29,29 +26,10 @@ _logger = logging.getLogger("uvicorn")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
-    next_run_time = datetime.now(UTC) + timedelta(seconds=1)
-
-    CronScheduler.add_job(
-        job_type=CheckRAMJob,
-        id="check_ram_cron_job",
-        trigger="interval",
-        minutes=1,
-        next_run_time=next_run_time,
-        misfire_grace_time=60,
-    )
-    CronScheduler.add_job(
-        job_type=SyncMetagraphJob,
-        id="sync_metagraph_cron_job",
-        trigger="interval",
-        minutes=30,
-        next_run_time=next_run_time,
-        misfire_grace_time=60,
-    )
-    CronScheduler.start()
-
     _logger.info(config)
+    await sync_metagraph_cron()
+    await sync_ram_cron()
     yield
-    CronScheduler.shutdown()
 
 
 app = FastAPI(lifespan=lifespan)
