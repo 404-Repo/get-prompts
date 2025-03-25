@@ -34,8 +34,8 @@ async def sync_ram_cron() -> None:
             vms = mem_info.vms / (1024 * 1024)  # Convert to MB
             _logger.info(f"RSS (Resident Set Size): {rss:.2f} MB")
             _logger.info(f"VMS (Virtual Memory Size): {vms:.2f} MB")
-            _logger.info("Sync metagraph RAM")
+            _logger.info("Sync RAM done")
         except Exception as e:
             print(f"Sync RAM failed: {e}")
         finally:
-            await asyncio.sleep(_SYNC_METAGRAPH_INTERVAL_SEC)
+            await asyncio.sleep(_SYNC_RAM_INTERVAL_SEC)

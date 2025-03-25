@@ -25,16 +25,15 @@ class MessagePackImagePromptSerializer(BaseImagePromptSerializer):
     def __init__(self, *, chunk_size: int = 1024 * 1024) -> None:
         self._chunk_size = chunk_size
 
-    # normalized_prompt
     async def serialize(self, *, image_prompts: list[ImagePrompt]) -> AsyncGenerator[bytes, None]:  # type: ignore
+        data: list[dict[str, str | bytes]] = []
         for prompt in image_prompts:
-            packed_data = msgpack.packb(
-                {"normalized_prompt": prompt.normalized_prompt, "data": prompt.image_data}, use_bin_type=True
-            )
+            data.append({"normalized_prompt": prompt.normalized_prompt, "data": prompt.image_data})
+        packed_data = msgpack.packb(data)
 
-            for i in range(0, len(packed_data), self._chunk_size):
-                await asyncio.sleep(0)
-                yield packed_data[i : i + self._chunk_size]
+        for i in range(0, len(packed_data), self._chunk_size):
+            await asyncio.sleep(0)
+            yield packed_data[i : i + self._chunk_size]
 
     async def deserialize(self, *, file: UploadFile) -> list[ImagePrompt]:
         unpacker = msgpack.Unpacker(raw=False)

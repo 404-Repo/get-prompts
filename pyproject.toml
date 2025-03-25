@@ -15,6 +15,7 @@ python-multipart = "^0.0.20"
 msgpack = "^1.1.0"
 psutil = "^7.0.0"
 faker = "^37.1.0"
+pillow = "^11.1.0"
 
 [tool.poetry.group.dev.dependencies]
 poetry = { version = "2.1.1" }
