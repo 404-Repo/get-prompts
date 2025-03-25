@@ -17,7 +17,7 @@ _logger = logging.getLogger("uvicorn")
 image_prompt_router = APIRouter(tags=["Image Prompts"])
 
 
-@image_prompt_router.get(
+@image_prompt_router.post(
     path="/download",
     summary="Download batch of image prompts in messagepack format.",
     description="Download batch of image prompts in messagepack format. "

@@ -19,7 +19,7 @@ async def submit_strings(batch: list[str], api_key: str = Depends(verify_api_key
     return Response()
 
 
-@text_prompt_router.post(path="/fetch-batch", summary="Fetch a batch of text prompts")
+@text_prompt_router.post(path="/download", summary="Fetch a batch of text prompts")
 async def fetch_text_prompt_batch(
     request: MetagraphData,
     metagraph: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
