@@ -43,7 +43,11 @@ class MetagraphManager:
 
         keypair = Keypair(ss58_address=hotkey)
         message = f"{nonce}{hotkey}"
-        result = bool(keypair.verify(message, base64.b64decode(signature.encode(encoding="utf-8"))))
+        try:
+            result = bool(keypair.verify(message, base64.b64decode(signature.encode(encoding="utf-8"))))
+        except Exception as e:
+            raise InvalidSignatureException(e)  # noqa: B904
+
         if not result:
             raise InvalidSignatureException("signature verification failed.")
 
