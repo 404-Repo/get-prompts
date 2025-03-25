@@ -10,15 +10,15 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK
 
+from application.api.image_prompt_endpoints import image_prompt_router
+from application.api.text_prompt_endpoints import text_prompt_router
 from application.config import config
 from application.cron.check_ram_job import CheckRAMJob
 from application.cron.cron_scheduler import CronScheduler
 from application.cron.sync_metagraph_job import SyncMetagraphJob
 from application.dependencies import get_metagraph_manager, verify_api_key
 from application.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException, NotEnoughImages
-from application.prompt_manager.image_prompt_endpoints import image_prompt_router
 from application.prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
-from application.prompt_manager.text_prompt_endpoints import text_prompt_router
 from application.prompt_manager.text_prompt_manager import text_prompt_manager
 from application.utils.metagraph_manager import MetagraphManager
 from application.utils.schemas.metagraph_data import MetagraphData
