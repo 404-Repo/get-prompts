@@ -14,7 +14,7 @@ logger = logging.getLogger("uvicorn")
 class MetagraphManager:
     def __init__(self, config: bt.config) -> None:
         self.subtensor = bt.async_subtensor(config=config)
-        self.metagraph = bt.core.metagraph.AsyncMetagraph(netuid=17, sync=False, subtensor=self.subtensor)
+        self.metagraph = bt.core.metagraph.AsyncMetagraph(netuid=config.netuid, sync=False, subtensor=self.subtensor)
         self.config = copy.deepcopy(config)
 
     async def sync(self) -> None:

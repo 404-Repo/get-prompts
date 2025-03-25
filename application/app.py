@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -26,8 +27,8 @@ _logger = logging.getLogger("uvicorn")
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     _logger.info(config)
-    await sync_metagraph_cron()
-    await sync_ram_cron()
+    asyncio.create_task(sync_metagraph_cron())
+    asyncio.create_task(sync_ram_cron())
     yield
 
 

@@ -59,6 +59,8 @@ class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
         for file in default_resources_dir.iterdir():
             with file.open("rb") as f:
                 self._image_prompts.append(ImagePrompt(image_data=f.read()))
+            if len(self._image_prompts) == max_prompt_cnt:
+                break
         logger.info(f"In memory image storage was initialized by {len(self._image_prompts)} default prompts.")
 
     @property
