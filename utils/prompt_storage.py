@@ -13,7 +13,6 @@ from utils.schemas.image_prompt import ImagePrompt
 
 PromptT = TypeVar("PromptT")
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("uvicorn")
 
 
@@ -46,8 +45,8 @@ class InMemoryTextPromptStorage(BasePromptStorage[str]):
         return rd.sample(list(self._prompts), min(len(self._prompts), batch_size))
 
     def add(self, *, prompts: list[str]) -> None:
-        unique_prompts = (d for d in prompts if d not in self._prompt_set)
-        unique_prompt_cnt = sum(1 for _ in unique_prompts)
+        unique_prompts = [d for d in prompts if d not in self._prompt_set]
+        unique_prompt_cnt = len(unique_prompts)
         total_prompt_cnt = unique_prompt_cnt + len(self._prompts)
         if total_prompt_cnt > self._max_prompt_cnt:
             for _ in range(total_prompt_cnt - self._max_prompt_cnt):
