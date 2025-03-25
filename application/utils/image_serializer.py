@@ -4,9 +4,9 @@ from collections.abc import AsyncGenerator
 
 import msgpack
 from fastapi import UploadFile
-from main.config import config
 
-from utils.schemas.image_prompt import ImagePrompt
+from application.config import config
+from application.utils.schemas.image_prompt import ImagePrompt
 
 
 class BaseImagePromptSerializer(ABC):
@@ -25,6 +25,7 @@ class MessagePackImagePromptSerializer(BaseImagePromptSerializer):
     def __init__(self, *, chunk_size: int = 1024 * 1024) -> None:
         self._chunk_size = chunk_size
 
+    # normalized_prompt
     async def serialize(self, *, image_prompts: list[ImagePrompt]) -> AsyncGenerator[bytes, None]:  # type: ignore
         for prompt in image_prompts:
             packed_data = msgpack.packb({"filename": prompt.filename, "data": prompt.image_data}, use_bin_type=True)

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
-from main.dependencies import get_metagraph_manager, verify_api_key
 from starlette.responses import Response
 from starlette.status import HTTP_200_OK
-from utils.metagraph_manager import MetagraphManager
-from utils.schemas.metagraph_data import MetagraphData
 
-from prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
-from prompt_manager.text_prompt_manager import text_prompt_manager
+from application.dependencies import get_metagraph_manager, verify_api_key
+from application.prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
+from application.prompt_manager.text_prompt_manager import text_prompt_manager
+from application.utils.metagraph_manager import MetagraphManager
+from application.utils.schemas.metagraph_data import MetagraphData
 
 
 text_prompt_router = APIRouter(tags=["Text Prompts"])

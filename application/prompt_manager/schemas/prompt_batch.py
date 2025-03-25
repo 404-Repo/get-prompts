@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from utils.schemas.image_prompt import ImagePrompt
+
+from application.utils.schemas.image_prompt import ImagePrompt
 
 
 class BasePromptBatch(BaseModel):
@@ -12,3 +13,6 @@ class TextPromptBatch(BasePromptBatch):
 
 class ImagePromptBatch(BasePromptBatch):
     image_prompts: list[ImagePrompt]
+
+
+# todo remove

@@ -45,7 +45,7 @@ def read_config() -> bt.config:
         "--min_stake_to_set_weights",
         type=int,
         help="Minimal required stake to set weights.",
-        default=1,
+        default=10000,
     )
     parser.add_argument(
         "--image_prompt_chunk_size",
@@ -59,3 +59,7 @@ def read_config() -> bt.config:
 
 # todo Handle config in pydantic object and create bt.config from it.
 config = read_config()
+
+
+# application
+# default parameter for

@@ -1,5 +1,5 @@
-from main.cron.base_cron_job import BaseCronJob
-from main.dependencies import metagraph_manager
+from application.cron.base_cron_job import BaseCronJob
+from application.dependencies import metagraph_manager
 
 
 class SyncMetagraphJob(BaseCronJob):

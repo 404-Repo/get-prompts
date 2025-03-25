@@ -3,7 +3,7 @@ import os
 
 import psutil
 
-from main.cron.base_cron_job import BaseCronJob
+from application.cron.base_cron_job import BaseCronJob
 
 
 _logger = logging.getLogger("uvicorn")

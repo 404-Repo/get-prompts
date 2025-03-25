@@ -2,14 +2,13 @@ import logging
 from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
-from main.dependencies import get_metagraph_manager
 from starlette.responses import Response, StreamingResponse
-from utils.image_serializer import image_prompt_serializer
-from utils.metagraph_manager import MetagraphManager
-from utils.schemas.metagraph_data import MetagraphData
 
-from prompt_manager.image_prompt_manager import image_prompt_manager
-from prompt_manager.schemas.prompt_batch import ImagePromptBatch
+from application.dependencies import get_metagraph_manager
+from application.prompt_manager.image_prompt_manager import image_prompt_manager
+from application.prompt_manager.schemas.prompt_batch import ImagePromptBatch
+from application.utils.image_serializer import image_prompt_serializer
+from application.utils.metagraph_manager import MetagraphManager
 
 
 _logger = logging.getLogger("uvicorn")
@@ -20,19 +19,17 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 _CHUNK_SIZE: int = 1024 * 1024
 
 
-@image_prompt_router.post(
+@image_prompt_router.get(
     path="/download",
     summary="Download batch of image prompts.",
 )
 async def download_prompt_batch(
-    request: MetagraphData,
+    # request: MetagraphData,
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> StreamingResponse:
     # metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
     filename = f"{datetime.now().timestamp()}.msgpack"
-    _logger.info(f"Creating batch for {filename}")
     batch = await image_prompt_manager.get_batch()
-    _logger.info(f"Batch created for {filename}")
 
     _logger.info(f"Returning {filename}...")
 

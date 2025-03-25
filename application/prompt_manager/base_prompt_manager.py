@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from prompt_manager.schemas.prompt_batch import BasePromptBatch
+from application.prompt_manager.schemas.prompt_batch import BasePromptBatch
 
 
 BatchT = TypeVar("BatchT", bound=BasePromptBatch)

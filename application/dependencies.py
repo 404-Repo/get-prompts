@@ -1,9 +1,9 @@
 from fastapi import Security
 from fastapi.security import APIKeyHeader
-from utils.metagraph_manager import MetagraphManager
 
-from main.config import config
-from main.exceptions import InvalidApiKeyException
+from application.config import config
+from application.exceptions import InvalidApiKeyException
+from application.utils.metagraph_manager import MetagraphManager
 
 
 metagraph_manager = MetagraphManager(config=config)

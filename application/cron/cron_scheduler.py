@@ -2,7 +2,7 @@ import datetime as dt
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from main.cron.base_cron_job import BaseCronJob
+from application.cron.base_cron_job import BaseCronJob
 
 
 class CronScheduler:

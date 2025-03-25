@@ -18,7 +18,7 @@ class ImageGenerator:
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         for i in range(image_cnt):
             try:
-                salt = random.randint(0, 200000)
+                salt = random.randint(0, 200000)  # noqa: S311
                 img_path = Path(output_dir) / f"{i}_{salt}.webp"
 
                 # Create a blank image

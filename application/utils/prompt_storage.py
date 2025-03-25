@@ -6,9 +6,8 @@ from collections import deque
 from pathlib import Path
 from typing import Generic, TypeVar
 
-from main.exceptions import FileWithTextDataDoesntExist, NoDefaultImagePrompts, NotEnoughImages
-
-from utils.schemas.image_prompt import ImagePrompt
+from application.exceptions import FileWithTextDataDoesntExist, NoDefaultImagePrompts, NotEnoughImages
+from application.utils.schemas.image_prompt import ImagePrompt
 
 
 PromptT = TypeVar("PromptT")
@@ -47,7 +46,7 @@ class InMemoryTextPromptStorage(BasePromptStorage[str]):
         logger.info(f"{len(self._prompts)} prompts loaded")
 
     @property
-    def prompts_cnt(self) -> int:
+    def prompt_cnt(self) -> int:
         return len(self._prompts)
 
     def get_batch(self, *, batch_size: int) -> list[str]:
@@ -61,6 +60,10 @@ class InMemoryTextPromptStorage(BasePromptStorage[str]):
             for _ in range(total_prompt_cnt - self._max_prompt_cnt):
                 prompt = self._prompts.popleft()
                 self._prompt_set.remove(prompt)
+                # add all known prompts.
+                # we guarantee that input is unique.
+                # known prompts after, known prompts before ---> can take in memory
+                #
         self._prompts.extend(unique_prompts)
         self._prompt_set.update(unique_prompts)
         logger.info(f"{unique_prompt_cnt} image prompts submitted. " f"Total count of prompts {len(self._prompts)}.")
@@ -85,6 +88,10 @@ class InMemoryImagePromptStorage(BasePromptStorage[ImagePrompt]):
                 self._filenames.add(file.name)
                 self._image_prompts.append(ImagePrompt(filename=file.name, image_data=f.read()))
         logger.info(f"In memory image storage was initialized by {len(self._image_prompts)} default prompts.")
+
+    @property
+    def prompt_cnt(self) -> int:
+        return len(self._image_prompts)
 
     def get_batch(self, *, batch_size: int) -> list[ImagePrompt]:
         if batch_size > len(self._image_prompts):

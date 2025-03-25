@@ -6,7 +6,8 @@ import bittensor as bt
 from bittensor import AsyncSubtensor
 from bittensor.core.metagraph import AsyncMetagraph
 from bittensor_wallet import Keypair
-from main.exceptions import InvalidSignatureException
+
+from application.exceptions import InvalidSignatureException
 
 
 logger = logging.getLogger("uvicorn")

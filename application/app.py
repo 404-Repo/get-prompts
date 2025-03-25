@@ -6,22 +6,22 @@ from typing import Any
 
 import uvicorn
 from fastapi import Depends, FastAPI
-from prompt_manager.image_prompt_endpoints import image_prompt_router
-from prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
-from prompt_manager.text_prompt_endpoints import text_prompt_router
-from prompt_manager.text_prompt_manager import text_prompt_manager
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK
-from utils.metagraph_manager import MetagraphManager
-from utils.schemas.metagraph_data import MetagraphData
 
-from main.config import config
-from main.cron.check_ram_job import CheckRAMJob
-from main.cron.cron_scheduler import CronScheduler
-from main.cron.sync_metagraph_job import SyncMetagraphJob
-from main.dependencies import get_metagraph_manager, verify_api_key
-from main.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException, NotEnoughImages
+from application.config import config
+from application.cron.check_ram_job import CheckRAMJob
+from application.cron.cron_scheduler import CronScheduler
+from application.cron.sync_metagraph_job import SyncMetagraphJob
+from application.dependencies import get_metagraph_manager, verify_api_key
+from application.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException, NotEnoughImages
+from application.prompt_manager.image_prompt_endpoints import image_prompt_router
+from application.prompt_manager.schemas.prompt_batch import BasePromptBatch, TextPromptBatch
+from application.prompt_manager.text_prompt_endpoints import text_prompt_router
+from application.prompt_manager.text_prompt_manager import text_prompt_manager
+from application.utils.metagraph_manager import MetagraphManager
+from application.utils.schemas.metagraph_data import MetagraphData
 
 
 _logger = logging.getLogger("uvicorn")

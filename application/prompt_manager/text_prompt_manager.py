@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from main.config import config
-from utils.prompt_storage import InMemoryTextPromptStorage
-
-from prompt_manager.base_prompt_manager import BasePromptManager
-from prompt_manager.schemas.prompt_batch import TextPromptBatch
+from application.config import config
+from application.prompt_manager.base_prompt_manager import BasePromptManager
+from application.prompt_manager.schemas.prompt_batch import TextPromptBatch
+from application.utils.prompt_storage import InMemoryTextPromptStorage
 
 
 class TextPromptManager(BasePromptManager[TextPromptBatch]):
