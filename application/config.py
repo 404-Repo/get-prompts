@@ -29,7 +29,7 @@ def read_config() -> bt.config:
     parser.add_argument(
         "--text_prompt_storage_size",
         type=int,
-        help="Number of text prompts to save in memory for valiators.",
+        help="Number of text prompts to save in memory for validators.",
         default=100000,
     )
     parser.add_argument(

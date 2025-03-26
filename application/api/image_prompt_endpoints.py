@@ -28,15 +28,13 @@ async def download_image_prompt_batch(
     metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
 ) -> StreamingResponse:
     metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
-    normalized_prompt = f"{datetime.now().timestamp()}.msgpack"
+    temp_filename = f"{datetime.now().timestamp()}.msgpack"
     batch = await image_prompt_manager.get_batch()
-
-    _logger.info(f"Returning {normalized_prompt}...")
 
     return StreamingResponse(
         image_prompt_serializer.serialize(image_prompts=batch),
         media_type="application/x-msgpack",
-        headers={"Content-Disposition": f"attachment; normalized_prompt={normalized_prompt}"},
+        headers={"Content-Disposition": f"attachment; filename={temp_filename}"},
     )
 
 

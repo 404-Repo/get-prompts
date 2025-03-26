@@ -15,6 +15,6 @@ async def sync_metagraph_cron() -> None:
             await metagraph_manager.sync()
             _logger.info("Sync metagraph done")
         except Exception as e:
-            print(f"Sync metagraph failed: {e}")
+            _logger.info(f"Sync metagraph failed: {e}")
         finally:
             await asyncio.sleep(_SYNC_METAGRAPH_INTERVAL_SEC)
