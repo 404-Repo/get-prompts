@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, UploadFile
 from starlette.responses import Response, StreamingResponse
 
 from application.dependencies import get_metagraph_manager, verify_api_key
-from application.prompt_manager.image_prompt_manager import image_prompt_manager
+from application.prompt_manager.image_url_prompt import image_prompt_manager
 from application.utils.image_serializer import image_prompt_serializer
-from application.utils.metagraph_manager import MetagraphManager
+from application.utils.metagraph import Metagraph
 from application.utils.schemas.metagraph_data import MetagraphData
 
 
@@ -25,7 +25,7 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 )
 async def download_image_prompt_batch(
     request: MetagraphData,
-    metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
+    metagraph_manager: Metagraph = Depends(get_metagraph_manager),  # noqa: B008
 ) -> StreamingResponse:
     metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
     temp_filename = f"{datetime.now().timestamp()}.msgpack"

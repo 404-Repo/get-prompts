@@ -16,8 +16,8 @@ from application.config import config
 from application.cron import sync_metagraph_cron
 from application.dependencies import get_metagraph_manager, verify_api_key
 from application.exceptions import BaseException, InvalidApiKeyException, InvalidSignatureException, NotEnoughImages
-from application.prompt_manager.text_prompt_manager import text_prompt_manager
-from application.utils.metagraph_manager import MetagraphManager
+from application.prompt_manager.text_prompt import text_prompt_manager
+from application.utils.metagraph import Metagraph
 from application.utils.schemas.metagraph_data import MetagraphData
 
 
@@ -63,7 +63,7 @@ async def submit_strings(batch: list[str], api_key: str = Depends(verify_api_key
 @app.get("/get")
 async def get_strings(
     request: MetagraphData,
-    metagraph_manager: MetagraphManager = Depends(get_metagraph_manager),  # noqa: B008
+    metagraph_manager: Metagraph = Depends(get_metagraph_manager),  # noqa: B008
 ) -> list[str]:
     metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
     batch = text_prompt_manager.get_batch()

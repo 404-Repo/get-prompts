@@ -11,7 +11,7 @@ from application.exceptions import InvalidSignatureException
 logger = logging.getLogger("uvicorn")
 
 
-class MetagraphManager:
+class Metagraph:
     def __init__(self, config: bt.config) -> None:
         self.config = copy.deepcopy(config)
         self.subtensor = bt.async_subtensor(config=self.config)

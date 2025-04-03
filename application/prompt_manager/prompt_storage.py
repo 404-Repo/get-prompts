@@ -7,6 +7,7 @@ from typing import Any
 
 import pandas as pd
 
+from application.config import config
 from application.exceptions import FileWithTextDataDoesntExist, NotEnoughPromptsAvailable
 
 
@@ -132,3 +133,12 @@ class InMemoryImageUrlStorage(BasePromptStorage):
         self._url_to_normalized_prompt.update(prompts)
         new_prompt_cnt = len(self._url_to_normalized_prompt) - prev_prompt_cnt
         _logger.info(f"{len(prompts)} image urls were submitted. New prompts: {new_prompt_cnt}.")
+
+
+text_prompt_storage = InMemoryTextPromptStorage(
+    max_prompt_cnt=config.text_prompt_storage_size,
+    default_prompt_file_path=config.default_text_prompt_file,
+)
+image_url_storage = InMemoryImageUrlStorage(
+    max_url_cnt=config.image_url_storage_size, default_image_url_file_path=config.default_image_url_file
+)

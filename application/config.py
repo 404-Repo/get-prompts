@@ -30,7 +30,7 @@ def read_config() -> bt.config:
         "--default_image_url_file",
         type=str,
         help="File with default image urls prompts.",
-        default="resources/texts/default_image_urls.txt",
+        default="resources/texts/default_image_urls.csv",
     )
     parser.add_argument(
         "--image_url_batch_size", type=int, help="Number of image urls to return to validators.", default=10000

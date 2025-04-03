@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from application.dependencies import metagraph_manager
+from application.dependencies import metagraph
 
 
 _logger = logging.getLogger("uvicorn")
@@ -12,7 +12,7 @@ async def sync_metagraph_cron() -> None:
     while True:
         try:
             _logger.info("Sync metagraph")
-            await metagraph_manager.sync()
+            await metagraph.sync()
             _logger.info("Sync metagraph done")
         except Exception as e:
             _logger.info(f"Sync metagraph failed: {e}")
