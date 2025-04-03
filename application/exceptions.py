@@ -14,9 +14,5 @@ class FileWithTextDataDoesntExist(BaseException):
     pass
 
 
-class NoDefaultImagePrompts(BaseException):
-    pass
-
-
-class NotEnoughImages(BaseException):
+class NotEnoughPromptsAvailable(BaseException):
     pass

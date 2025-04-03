@@ -28,7 +28,7 @@ class TextPromptManager(BasePromptManager[str]):
 text_prompt_manager = TextPromptManager(
     submitted_text_storage=InMemoryTextPromptStorage(
         max_prompt_cnt=config.text_prompt_storage_size,
-        default_prompt_path=Path(config.default_text_prompt_file),
+        default_prompt_file_path=Path(config.default_text_prompt_file),
     ),
     batch_size=config.text_prompt_batch_size,
 )

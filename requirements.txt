@@ -5,7 +5,5 @@ pydantic==2.10.6
 starlette==0.37.2
 aiofiles==24.1.0
 python-multipart==0.0.20
-msgpack==1.1.0
-psutil==7.0.0
 faker==37.1.0
-pillow==11.1.0
+pandas==2.2.3

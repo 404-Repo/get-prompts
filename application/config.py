@@ -18,12 +18,6 @@ def read_config() -> bt.config:
         default="resources/texts/default_prompts.txt",
     )
     parser.add_argument(
-        "--default_image_prompt_dir",
-        type=str,
-        help="Folder with image prompts.",
-        default="resources/images/default",
-    )
-    parser.add_argument(
         "--text_prompt_batch_size", type=int, help="Number of text prompts to return to validators.", default=100000
     )
     parser.add_argument(
@@ -33,25 +27,25 @@ def read_config() -> bt.config:
         default=100000,
     )
     parser.add_argument(
-        "--image_prompt_batch_size", type=int, help="Number of image prompts to return to validators.", default=2500
+        "--default_image_url_file",
+        type=str,
+        help="File with default image urls prompts.",
+        default="resources/texts/default_image_urls.txt",
     )
     parser.add_argument(
-        "--submitted_image_prompt_buffer_size",
+        "--image_url_batch_size", type=int, help="Number of image urls to return to validators.", default=10000
+    )
+    parser.add_argument(
+        "--image_url_storage_size",
         type=int,
-        help="Number of submitted image prompts to save in memory.",
-        default=10000,
+        help="Number of image url sizes to save in memory.",
+        default=100000,
     )
     parser.add_argument(
         "--min_stake_to_set_weights",
         type=int,
         help="Minimal required stake to set weights.",
         default=10000,
-    )
-    parser.add_argument(
-        "--image_prompt_chunk_size",
-        type=int,
-        help="Chunk size used to send image files.",
-        default=1024 * 1024,
     )
 
     return bt.config(parser)
