@@ -9,7 +9,7 @@ def read_config() -> bt.config:
     bt.subtensor.add_args(parser)
 
     parser.add_argument("--netuid", type=int, help="Subnet netuid", default=17)
-    parser.add_argument("--port", type=int, help="Service port", default=8093)
+    parser.add_argument("--port", type=int, help="Service port", default=80)
     parser.add_argument("--api-key", type=str, help="API-KEY to auth prompt generators.", default="")
     parser.add_argument(
         "--default_text_prompt_file",
