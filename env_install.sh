@@ -13,6 +13,10 @@ fi
 CONDA_BASE=$(conda info --base)
 source "${CONDA_BASE}/etc/profile.d/conda.sh"
 
+conda env create -f environment.yml
+conda activate three-gen-prompt-receiver
+conda info --env
+
 # Store the path of the Conda interpreter
 CONDA_INTERPRETER_PATH=$(which python)
 
@@ -30,7 +34,3 @@ EOF
 
 echo -e "[INFO] receiver.config.js was generated for PM2."
 echo -e "[INFO] Start initialization of the conda environment."
-
-conda env create -f environment.yml
-conda activate three-gen-prompt-receiver
-conda info --env

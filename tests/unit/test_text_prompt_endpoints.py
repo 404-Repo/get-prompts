@@ -27,7 +27,7 @@ class TestTextPromptEndpoints:
             json=metagraph_data.model_dump(),
         )
         assert response.status_code == 200
-        returned_prompts = response.json()
+        returned_prompts = TextPromptDTO.model_validate(response.json()).normalized_prompts
         for prompt in promts:
             assert prompt in returned_prompts
 
@@ -36,4 +36,5 @@ class TestTextPromptEndpoints:
     ) -> None:
         response = test_client.post(construct_url(Routes.BATCH_TEXT_PROMPTS), json=metagraph_data.model_dump())
         assert response.status_code == 200
-        assert len(response.json()) == config.text_prompt_batch_size
+        response_data = TextPromptDTO.model_validate(response.json())
+        assert len(response_data.normalized_prompts) == config.text_prompt_batch_size

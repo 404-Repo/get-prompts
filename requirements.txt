@@ -3,9 +3,9 @@ bittensor-wallet==3.0.4
 fastapi==0.110.1
 pydantic==2.10.6
 starlette==0.37.2
-aiofiles==24.1.0
-python-multipart==0.0.20
 faker==37.1.0
 pandas==2.2.3
 pytest==8.3.5
 pytest-mock==3.14.0
+uvicorn==0.34.0
+httpx==0.28.1
