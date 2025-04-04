@@ -20,6 +20,8 @@ class TestImagePromptEndpoints:
         setup_dependencies: None,
     ) -> None:
         promts: dict[str, str] = {fake.url(): fake.sentence() for _ in range(20)}
+
+        # Submit image prompts
         req_prompts: list[ImagePromptFull] = []
         for url, prompt in promts.items():
             req_prompts.append(
@@ -35,6 +37,7 @@ class TestImagePromptEndpoints:
         response = test_client.post(construct_url(Routes.SUBMIT_IMAGE_PROMPTS), json=json_data, headers=api_headers)
         assert response.status_code == 200
 
+        # Retrieve image prompts
         response = test_client.post(
             construct_url(Routes.BATCH_IMAGE_PROMPTS, {"include_normalized_prompt": "true"}),
             json=metagraph_data.model_dump(),

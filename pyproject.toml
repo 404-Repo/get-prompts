@@ -9,13 +9,10 @@ readme = "README.md"
 python = ">=3.12,<3.13"
 bittensor = "9.0.1"
 python-dotenv = "1.0.1"
-aiofiles = "^24.1.0"
-types-aiofiles = "^24.1.0.20241221"
-python-multipart = "^0.0.20"
-msgpack = "^1.1.0"
-psutil = "^7.0.0"
 faker = "^37.1.0"
-pillow = "^11.1.0"
+pytest = "^8.3.5"
+pytest-mock = "^3.14.0"
+pandas = "^2.2.3"
 
 [tool.poetry.group.dev.dependencies]
 poetry = { version = "2.1.1" }
@@ -24,9 +21,7 @@ ruff = "0.9.7"
 bandit = "1.8.3"
 black = "25.1.0"
 mypy = "1.15.0"
-types-requests = "2.32.0.*"
 pre-commit = "^4.0.1"
-types-aiofiles = "^24.1.0.20241221"
 
 [build-system]
 requires = ["poetry-core"]

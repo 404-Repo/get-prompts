@@ -1,5 +1,2 @@
 [virtualenvs]
 create = false
-# todo update readme how to launch using poetry
-#create = true
-#in-project=true

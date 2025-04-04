@@ -4,7 +4,7 @@ import faker
 import pytest
 from application.config import config
 from application.exceptions import FileWithTextDataDoesntExist, NotEnoughPromptsAvailable
-from application.prompt.prompt_storage import InMemoryImagePromptUrlStorage
+from application.prompt.prompt_storage import InMemoryImagePromptStorage
 
 
 fake = faker.Faker()
@@ -59,8 +59,8 @@ class TestInMemoryImagePromptUrlStorage:
 
     def _get_storage(
         self, default_image_url_file: Path = Path(config.default_image_url_file)
-    ) -> InMemoryImagePromptUrlStorage:
-        return InMemoryImagePromptUrlStorage(
+    ) -> InMemoryImagePromptStorage:
+        return InMemoryImagePromptStorage(
             max_url_cnt=TestInMemoryImagePromptUrlStorage._MAX_URL_CNT,
             default_image_url_file_path=default_image_url_file,
         )

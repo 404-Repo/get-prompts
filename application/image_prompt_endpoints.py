@@ -20,7 +20,7 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 @image_prompt_router.post(
     path="/batch",
     summary="Obtain batch of image prompts with optional normalized text prompts.",
-    description="Obtain batch of image prompt image_prompts with optional normalized text prompt.",
+    description="Obtain batch of image prompts with optional normalized text prompts.",
     response_model=ImagePromptObtainDTO,
 )
 async def obtain_image_prompt_batch(
@@ -44,7 +44,7 @@ async def obtain_image_prompt_batch(
 @image_prompt_router.post(
     path="/submit",
     summary="Submit batch of image prompts.",
-    description="Submit batch of image prompts optionally containing normalized text prompts.",
+    description="Submit batch of image prompts containing normalized text prompts.",
 )
 async def submit_image_prompt_batch(
     request: ImagePromptSubmitDTO,

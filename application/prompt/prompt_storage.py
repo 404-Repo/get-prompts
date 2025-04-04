@@ -80,14 +80,13 @@ class InMemoryTextPromptStorage(BasePromptStorage):
         _logger.info(f"{len(prompts)} text prompts were submitted. New prompts: {new_prompt_cnt}.")
 
 
-class InMemoryImagePromptUrlStorage(BasePromptStorage):
+class InMemoryImagePromptStorage(BasePromptStorage):
     """
-    Saves in memory image image_prompts in S3 compatible storage and prompt per each image.
-    It is expected that storage is initialized from csv file containing
-    two columns with url and normalized prompt.
+    Saves in memory image prompts: urls in S3 compatible storage and normalized text prompt per each image.
+    It is expected that storage is initialized from csv file containing two columns with url and normalized prompt.
 
-    _urls queue contains active image_prompts.
-    _url_to_prompt contains all historical image_prompts.
+    _urls queue contains active image prompts urls.
+    _url_to_prompt contains all historical image prompts.
     """
 
     def __init__(self, *, max_url_cnt: int, default_image_url_file_path: Path) -> None:
@@ -97,7 +96,6 @@ class InMemoryImagePromptUrlStorage(BasePromptStorage):
             raise FileWithTextDataDoesntExist(f"File {default_image_url_file_path} does not exist.")
         df = pd.read_csv(default_image_url_file_path)
         self._url_to_normalized_prompt = df.set_index(df.columns[0])[df.columns[1]].to_dict()
-        print(len(self._url_to_normalized_prompt))
 
     @property
     def url_cnt(self) -> int:
@@ -105,7 +103,7 @@ class InMemoryImagePromptUrlStorage(BasePromptStorage):
 
     def get_batch(self, *, batch_size: int) -> dict[str, str]:
         """
-        Randomly extracts batch_size image image_prompts with normalized prompts from submitted image image_prompts.
+        Randomly extracts batch_size image prompts with normalized prompts from submitted image image_prompts.
         If there are not enough active image image_prompts than takes image_prompts from the _url_to_normalized_prompt.
         """
         if batch_size > self.url_cnt + len(self._url_to_normalized_prompt):
@@ -128,7 +126,7 @@ class InMemoryImagePromptUrlStorage(BasePromptStorage):
 
     def add(self, *, prompts: dict[str, str]) -> None:
         """
-        Adds new image url prompts to the storage.
+        Adds new image prompts to the storage.
         :param prompts: dictionary where key is an url of image in S3-compatible storage and value is normalized prompt.
         """
         prev_prompt_cnt = len(self._url_to_normalized_prompt)
@@ -142,6 +140,6 @@ text_prompt_storage = InMemoryTextPromptStorage(
     max_prompt_cnt=config.text_prompt_storage_size,
     default_prompt_file_path=Path(config.default_text_prompt_file),
 )
-image_prompt_url_storage = InMemoryImagePromptUrlStorage(
+image_prompt_storage = InMemoryImagePromptStorage(
     max_url_cnt=config.image_url_storage_size, default_image_url_file_path=Path(config.default_image_url_file)
 )

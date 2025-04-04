@@ -19,7 +19,7 @@ async def submit_strings(request: TextPromptDTO, api_key: str = Depends(verify_a
 async def get_text_prompt_batch(
     request: MetagraphDataDTO,
     metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
-) -> list[str]:
+) -> TextPromptDTO:
     metagraph.verify_signature(request.hotkey, request.nonce, request.signature)
     batch = text_prompt.get_batch(batch_size=config.text_prompt_batch_size)
-    return batch
+    return TextPromptDTO(normalized_prompts=batch)
