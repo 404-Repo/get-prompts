@@ -64,7 +64,7 @@ class InMemoryTextPromptStorage(BasePromptStorage):
 
         if batch_size == self.prompt_cnt:
             return list(self._prompts)
-        elif batch_size > self.prompt_cnt:
+        elif batch_size < self.prompt_cnt:
             return list(rd.sample(self._prompts, batch_size))
         else:
             additional_prompt_cnt = batch_size - self.prompt_cnt
@@ -97,6 +97,7 @@ class InMemoryImagePromptUrlStorage(BasePromptStorage):
             raise FileWithTextDataDoesntExist(f"File {default_image_url_file_path} does not exist.")
         df = pd.read_csv(default_image_url_file_path)
         self._url_to_normalized_prompt = df.set_index(df.columns[0])[df.columns[1]].to_dict()
+        print(len(self._url_to_normalized_prompt))
 
     @property
     def url_cnt(self) -> int:
@@ -115,14 +116,14 @@ class InMemoryImagePromptUrlStorage(BasePromptStorage):
 
         if batch_size == self.url_cnt:
             return {url: self._url_to_normalized_prompt[url] for url in self._urls}
-        elif batch_size > self.url_cnt:
+        elif batch_size < self.url_cnt:
             batch_urls = rd.sample(self._urls, batch_size)
             return {url: self._url_to_normalized_prompt[url] for url in batch_urls}
         else:
             additional_prompt_cnt = batch_size - self.url_cnt
             url_to_normalized_prompt = {url: self._url_to_normalized_prompt[url] for url in self._urls}
             url_to_normalized_prompt.update(
-                dict(rd.sample(self._url_to_normalized_prompt.items(), additional_prompt_cnt))
+                dict(rd.sample(list(self._url_to_normalized_prompt.items()), additional_prompt_cnt))
             )
             return url_to_normalized_prompt
 
