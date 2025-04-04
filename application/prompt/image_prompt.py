@@ -10,11 +10,11 @@ class ImagePrompt(BasePrompt):
     ) -> None:
         self._image_prompt_url_storage = image_prompt_url_storage
 
-    def submit(self, *, batch: dict[str, str]) -> None:  # type: ignore
+    def submit(self, *, batch: dict[str, str]) -> None:
         self._image_prompt_url_storage.add(prompts=batch)
 
     def get_batch(self, *, batch_size: int) -> dict[str, str]:
-        # todo Check that file is actually image in webp format
+        print(batch_size)
         return self._image_prompt_url_storage.get_batch(batch_size=batch_size)
 
 

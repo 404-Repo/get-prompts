@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
 
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(image_prompt_router, prefix="/images")
+app.include_router(image_prompt_router, prefix="/image_prompts")
 app.include_router(text_prompt_router, prefix="/text_prompts")
 
 

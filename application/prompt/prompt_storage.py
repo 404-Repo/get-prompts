@@ -121,11 +121,10 @@ class InMemoryImagePromptUrlStorage(BasePromptStorage):
             return {url: self._url_to_normalized_prompt[url] for url in batch_urls}
         else:
             additional_prompt_cnt = batch_size - self.url_cnt
-            url_to_normalized_prompt = {url: self._url_to_normalized_prompt[url] for url in self._urls}
-            url_to_normalized_prompt.update(
-                dict(rd.sample(list(self._url_to_normalized_prompt.items()), additional_prompt_cnt))
-            )
-            return url_to_normalized_prompt
+            active_urls = {url: self._url_to_normalized_prompt[url] for url in self._urls}
+            other_urls = filter(lambda x: x[0] not in self._urls, self._url_to_normalized_prompt.items())
+            active_urls.update(dict(rd.sample(list(other_urls), additional_prompt_cnt)))
+            return active_urls
 
     def add(self, *, prompts: dict[str, str]) -> None:
         """

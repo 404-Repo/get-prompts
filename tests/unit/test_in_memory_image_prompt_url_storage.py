@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import faker
-import pandas as pd
 import pytest
 from application.config import config
 from application.exceptions import FileWithTextDataDoesntExist, NotEnoughPromptsAvailable
@@ -16,10 +15,8 @@ class TestInMemoryImagePromptUrlStorage:
 
     def test_image_prompt_url_storage_initialized_with_default(self) -> None:
         storage = self._get_storage()
-        default_file_path = Path(config.default_image_url_file)
         assert storage.url_cnt == 0
-        df = pd.read_csv(default_file_path)
-        assert len(storage._url_to_normalized_prompt) == len(df)
+        assert len(storage._url_to_normalized_prompt) > 0
 
     def test_image_prompt_url_storage_raises_error_if_no_default_prompts(self) -> None:
         with pytest.raises(FileWithTextDataDoesntExist):

@@ -2,24 +2,30 @@ from application.app import app
 from application.config import config
 from application.dependencies import get_metagraph, verify_api_key
 from application.models import MetagraphDataDTO, TextPromptDTO
+from faker import Faker
 from fastapi.testclient import TestClient
-from tests.unit.mocks import fake_get_metagraph, fake_verify_api_key
+from tests.mocks import fake_get_metagraph, fake_verify_api_key
+from tests.routes import Routes, construct_url
 
 
 app.dependency_overrides[get_metagraph] = fake_get_metagraph
 app.dependency_overrides[verify_api_key] = fake_verify_api_key
+
+fake = Faker()
 
 
 class TestTextPromptEndpoints:
     def test_submit_and_retrieve_strings_success(
         self, test_client: TestClient, api_headers: dict[str, str], metagraph_data: MetagraphDataDTO
     ) -> None:
-        promts = ["prompt1", "prompt2"]
+        promts = [fake.sentence() for _ in range(20)]
         request_data = TextPromptDTO(normalized_prompts=promts)
-        response = test_client.post("/text_prompts/submit", json=request_data.model_dump(), headers=api_headers)
+        response = test_client.post(
+            construct_url(Routes.SUBMIT_TEXT_PROMPTS), json=request_data.model_dump(), headers=api_headers
+        )
         assert response.status_code == 200
         response = test_client.post(
-            "/text_prompts/batch",
+            construct_url(Routes.BATCH_TEXT_PROMPTS),
             json=metagraph_data.model_dump(),
         )
         assert response.status_code == 200
@@ -32,6 +38,6 @@ class TestTextPromptEndpoints:
         test_client: TestClient,
         metagraph_data: MetagraphDataDTO,
     ) -> None:
-        response = test_client.post("/text_prompts/batch", json=metagraph_data.model_dump())
+        response = test_client.post(construct_url(Routes.BATCH_TEXT_PROMPTS), json=metagraph_data.model_dump())
         assert response.status_code == 200
         assert len(response.json()) == config.text_prompt_batch_size

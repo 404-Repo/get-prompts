@@ -25,7 +25,7 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 )
 async def obtain_image_prompt_batch(
     metagraph_data: MetagraphDataDTO,
-    include_text: bool = Query(default=False, help="Include text normalized prompts."),
+    include_normalized_prompt: bool = Query(default=False, help="Include normalized prompts."),
     metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
 ) -> ImagePromptObtainDTO:
     metagraph.verify_signature(metagraph_data.hotkey, metagraph_data.nonce, metagraph_data.signature)
@@ -34,7 +34,7 @@ async def obtain_image_prompt_batch(
         prompts=[
             ImagePromptPartial(
                 url=cast(HttpUrl, url),
-                normalized_prompt=prompt if include_text else None,
+                normalized_prompt=prompt if include_normalized_prompt else None,
             )
             for url, prompt in batch.items()
         ]
