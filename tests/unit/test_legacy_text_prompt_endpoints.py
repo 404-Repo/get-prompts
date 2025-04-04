@@ -1,5 +1,5 @@
 from application.config import config
-from application.models import MetagraphDataDTO, TextPromptDTO
+from application.models import MetagraphDataDTO
 from faker import Faker
 from fastapi.testclient import TestClient
 from tests.routes import Routes, construct_url
@@ -8,7 +8,7 @@ from tests.routes import Routes, construct_url
 fake = Faker()
 
 
-class TestTextPromptEndpoints:
+class TestLegacyTextPromptEndpoints:
     def test_submit_and_retrieve_strings_success(
         self,
         test_client: TestClient,
@@ -17,13 +17,10 @@ class TestTextPromptEndpoints:
         setup_dependencies: None,
     ) -> None:
         promts = [fake.sentence() for _ in range(20)]
-        request_data = TextPromptDTO(normalized_prompts=promts)
-        response = test_client.post(
-            construct_url(Routes.SUBMIT_TEXT_PROMPTS), json=request_data.model_dump(), headers=api_headers
-        )
+        response = test_client.post(construct_url(Routes.LEGACY_TEXT_PROMPTS_SUBMIT), json=promts, headers=api_headers)
         assert response.status_code == 200
         response = test_client.post(
-            construct_url(Routes.BATCH_TEXT_PROMPTS),
+            construct_url(Routes.LEGACY_TEXT_PROMPTS_BATCH),
             json=metagraph_data.model_dump(),
         )
         assert response.status_code == 200
@@ -34,6 +31,6 @@ class TestTextPromptEndpoints:
     def test_get_default_text_prompts_batch_success(
         self, test_client: TestClient, metagraph_data: MetagraphDataDTO, setup_dependencies: None
     ) -> None:
-        response = test_client.post(construct_url(Routes.BATCH_TEXT_PROMPTS), json=metagraph_data.model_dump())
+        response = test_client.post(construct_url(Routes.LEGACY_TEXT_PROMPTS_BATCH), json=metagraph_data.model_dump())
         assert response.status_code == 200
         assert len(response.json()) == config.text_prompt_batch_size

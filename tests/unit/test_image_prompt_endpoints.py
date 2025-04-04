@@ -1,25 +1,23 @@
 from typing import cast
 
-from application.app import app
 from application.config import config
-from application.dependencies import get_metagraph, verify_api_key
 from application.models import ImagePromptFull, ImagePromptObtainDTO, ImagePromptSubmitDTO, MetagraphDataDTO
 from faker import Faker
 from fastapi.testclient import TestClient
 from pydantic import HttpUrl
-from tests.mocks import fake_get_metagraph, fake_verify_api_key
 from tests.routes import Routes, construct_url
 
-
-app.dependency_overrides[get_metagraph] = fake_get_metagraph
-app.dependency_overrides[verify_api_key] = fake_verify_api_key
 
 fake = Faker()
 
 
 class TestImagePromptEndpoints:
     def test_submit_and_retrieve_success(
-        self, test_client: TestClient, api_headers: dict[str, str], metagraph_data: MetagraphDataDTO
+        self,
+        test_client: TestClient,
+        api_headers: dict[str, str],
+        metagraph_data: MetagraphDataDTO,
+        setup_dependencies: None,
     ) -> None:
         promts: dict[str, str] = {fake.url(): fake.sentence() for _ in range(20)}
         req_prompts: list[ImagePromptFull] = []
@@ -49,9 +47,7 @@ class TestImagePromptEndpoints:
             assert prompt in cast(str, batch_prompts_dict[url])
 
     def test_get_default_image_prompts_batch_without_text_success(
-        self,
-        test_client: TestClient,
-        metagraph_data: MetagraphDataDTO,
+        self, test_client: TestClient, metagraph_data: MetagraphDataDTO, setup_dependencies: None
     ) -> None:
         response = test_client.post(construct_url(Routes.BATCH_IMAGE_PROMPTS), json=metagraph_data.model_dump())
         assert response.status_code == 200
@@ -61,9 +57,7 @@ class TestImagePromptEndpoints:
             assert prompt.normalized_prompt is None
 
     def test_get_default_image_prompts_batch_with_text_success(
-        self,
-        test_client: TestClient,
-        metagraph_data: MetagraphDataDTO,
+        self, test_client: TestClient, metagraph_data: MetagraphDataDTO, setup_dependencies: None
     ) -> None:
         response = test_client.post(
             construct_url(Routes.BATCH_IMAGE_PROMPTS, {"include_normalized_prompt": "true"}),

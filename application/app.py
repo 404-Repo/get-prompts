@@ -61,7 +61,7 @@ async def submit_strings(batch: list[str], api_key: str = Depends(verify_api_key
 
 
 # todo: remove because deprecated
-@app.get("/get")
+@app.post("/get")
 async def get_strings(
     request: MetagraphDataDTO,
     metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008

@@ -14,7 +14,7 @@ class Routes(Enum):
     SUBMIT_IMAGE_PROMPTS = "/image_prompts/submit"
     BATCH_IMAGE_PROMPTS = "/image_prompts/batch"
 
-    LEGACY_TEXT_PROMPTS_BATCH = "/batch"
+    LEGACY_TEXT_PROMPTS_BATCH = "/get"
     LEGACY_TEXT_PROMPTS_SUBMIT = "/submit"
 
 
