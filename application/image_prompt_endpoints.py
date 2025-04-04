@@ -1,14 +1,14 @@
 import logging
-from datetime import datetime
+from typing import cast
 
-from fastapi import APIRouter, Depends, UploadFile
-from starlette.responses import Response, StreamingResponse
+from fastapi import APIRouter, Depends, Query
+from pydantic import HttpUrl
 
+from application.config import config
 from application.dependencies import get_metagraph_manager, verify_api_key
-from application.prompt_manager.image_url_prompt import image_prompt_manager
-from application.utils.image_serializer import image_prompt_serializer
-from application.utils.metagraph import Metagraph
-from application.utils.schemas.metagraph_data import MetagraphData
+from application.metagraph import Metagraph
+from application.models import ImagePromptObtainDTO, ImagePromptPartial, ImagePromptSubmitDTO, MetagraphDataDTO
+from application.prompt.image_prompt import image_prompt
 
 
 _logger = logging.getLogger("uvicorn")
@@ -18,37 +18,36 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 
 
 @image_prompt_router.post(
-    path="/download",
-    summary="Download batch of image prompts in messagepack format.",
-    description="Download batch of image prompts in messagepack format. "
-    "Each message is sent in format {'normalized_prompt': '...', 'data': '...'}",
+    path="/batch",
+    summary="Obtain batch of image prompts with optional normalized text prompts.",
+    description="Obtain batch of image prompt image_prompts with optional normalized text prompt.",
+    response_model=ImagePromptObtainDTO,
 )
-async def download_image_prompt_batch(
-    request: MetagraphData,
+async def obtain_image_prompt_batch(
+    metagraph_data: MetagraphDataDTO,
+    include_text: bool = Query(default=False, help="Include text normalized prompts."),
     metagraph_manager: Metagraph = Depends(get_metagraph_manager),  # noqa: B008
-) -> StreamingResponse:
-    metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
-    temp_filename = f"{datetime.now().timestamp()}.msgpack"
-    batch = await image_prompt_manager.get_batch()
-
-    return StreamingResponse(
-        image_prompt_serializer.serialize(image_prompts=batch),
-        media_type="application/x-msgpack",
-        headers={"Content-Disposition": f"attachment; filename={temp_filename}"},
+) -> ImagePromptObtainDTO:
+    metagraph_manager.verify_signature(metagraph_data.hotkey, metagraph_data.nonce, metagraph_data.signature)
+    batch = image_prompt.get_batch(batch_size=config.image_prompt_batch_size)
+    return ImagePromptObtainDTO(
+        prompts=[
+            ImagePromptPartial(
+                url=cast(HttpUrl, url),
+                normalized_prompt=prompt if include_text else None,
+            )
+            for url, prompt in batch.items()
+        ]
     )
 
 
 @image_prompt_router.post(
     path="/submit",
-    summary="Submit batch of image prompts in message pack format.",
-    description="Submit batch of image prompts in message pack format. "
-    "Messages should be sent as bytes stream"
-    " in format {'normalized_prompt': '...', 'data': '...'}",
+    summary="Submit batch of image prompts.",
+    description="Submit batch of image prompts optionally containing normalized text prompts.",
 )
-async def upload_image_prompt_batch(
-    file: UploadFile,
+async def submit_image_prompt_batch(
+    request: ImagePromptSubmitDTO,
     api_key: str = Depends(verify_api_key),  # noqa: B008
-) -> Response:
-    await image_prompt_serializer.deserialize(file=file)
-    await file.close()
-    return Response(status_code=200)
+) -> None:
+    image_prompt.submit(batch={str(prompt.url): prompt.normalized_prompt for prompt in request.prompts})

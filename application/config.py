@@ -15,7 +15,7 @@ def read_config() -> bt.config:
         "--default_text_prompt_file",
         type=str,
         help="File with default text prompts.",
-        default="resources/texts/default_prompts.txt",
+        default="resources/text_prompts/default_prompts.txt",
     )
     parser.add_argument(
         "--text_prompt_batch_size", type=int, help="Number of text prompts to return to validators.", default=100000
@@ -29,16 +29,16 @@ def read_config() -> bt.config:
     parser.add_argument(
         "--default_image_url_file",
         type=str,
-        help="File with default image urls prompts.",
-        default="resources/texts/default_image_urls.csv",
+        help="File with default image image_prompts prompts.",
+        default="resources/image_prompts/default_image_urls.csv",
     )
     parser.add_argument(
-        "--image_url_batch_size", type=int, help="Number of image urls to return to validators.", default=10000
+        "--image_prompt_batch_size", type=int, help="Number of image prompts to return to validators.", default=10000
     )
     parser.add_argument(
-        "--image_url_storage_size",
+        "--image_prompt_storage_size",
         type=int,
-        help="Number of image url sizes to save in memory.",
+        help="Number of image prompt to save in memory.",
         default=100000,
     )
     parser.add_argument(

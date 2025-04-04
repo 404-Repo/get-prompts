@@ -2,8 +2,9 @@ from pathlib import Path
 
 import faker
 import pytest
+from application.config import config
 from application.exceptions import FileWithTextDataDoesntExist
-from application.utils.prompt_storage import InMemoryTextPromptStorage
+from application.prompt.prompt_storage import InMemoryTextPromptStorage
 
 
 fake = faker.Faker()
@@ -14,7 +15,11 @@ class TestInMemoryTextPromptStorage:
 
     def test_text_promp_storage_initialized_with_default(self) -> None:
         storage = self._get_storage()
-        assert storage.prompt_cnt >= TestInMemoryTextPromptStorage._MAX_PROMPT_CNT
+        default_file_path = Path(config.default_text_prompt_file)
+        assert storage.prompt_cnt == 0
+        with default_file_path.open(mode="r") as f:
+            lines_cnt = len(set(f.readlines()))
+            assert storage.all_prompt_cnt == lines_cnt
 
     def test_text_promp_storage_raises_error_if_no_default_prompts(self) -> None:
         with pytest.raises(FileWithTextDataDoesntExist):
@@ -34,10 +39,19 @@ class TestInMemoryTextPromptStorage:
         for prompt in prompts:
             assert prompt.startswith("temp_")
 
+    def test_submitted_prompts_are_returned_first(self) -> None:
+        batch_size = 10
+        storage = self._get_storage()
+        new_prompts = [f"temp_{idx}" for idx in range(batch_size)]
+        storage.add(prompts=new_prompts)
+        batch_prompts = storage.get_batch(batch_size=batch_size)
+        for prompt in new_prompts:
+            assert any(prompt == batch_prompt for batch_prompt in batch_prompts)
+
     def _get_storage(
-        self, default_prompts_file: Path = Path("resources/texts/default_prompts.txt")
+        self, default_prompts_file: Path = Path("resources/text_prompts/default_prompts.txt")
     ) -> InMemoryTextPromptStorage:
         return InMemoryTextPromptStorage(
             max_prompt_cnt=TestInMemoryTextPromptStorage._MAX_PROMPT_CNT,
-            default_prompt_path=default_prompts_file,
+            default_prompt_file_path=default_prompts_file,
         )

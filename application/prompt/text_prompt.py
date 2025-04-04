@@ -1,5 +1,5 @@
-from application.prompt_manager.base_prompt import BasePrompt
-from application.prompt_manager.prompt_storage import InMemoryTextPromptStorage, text_prompt_storage
+from application.prompt.base_prompt import BasePrompt
+from application.prompt.prompt_storage import InMemoryTextPromptStorage, text_prompt_storage
 
 
 class TextPrompt(BasePrompt):
@@ -10,8 +10,8 @@ class TextPrompt(BasePrompt):
     ) -> None:
         self._text_prompt_storage = text_prompt_storage
 
-    def submit(self, *, batch: list[str]) -> None:  # type: ignore
-        self._text_prompt_storage.add(prompts=batch)
+    def submit(self, *, prompts: list[str]) -> None:  # type: ignore
+        self._text_prompt_storage.add(prompts=prompts)
 
     def get_batch(self, *, batch_size: int) -> list[str]:  # type: ignore
         return self._text_prompt_storage.get_batch(batch_size=batch_size)

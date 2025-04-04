@@ -1,29 +1,25 @@
 from fastapi import APIRouter, Depends
-from starlette.responses import Response
-from starlette.status import HTTP_200_OK
 
+from application.config import config
 from application.dependencies import get_metagraph_manager, verify_api_key
-from application.prompt_manager.text_prompt import text_prompt_manager
-from application.utils.metagraph import Metagraph
-from application.utils.schemas.metagraph_data import MetagraphData
+from application.metagraph import Metagraph
+from application.models import MetagraphDataDTO, TextPromptDTO
+from application.prompt.text_prompt import text_prompt
 
 
 text_prompt_router = APIRouter(tags=["Text Prompts"])
 
 
-@text_prompt_router.post(
-    path="/submit", status_code=HTTP_200_OK, summary="Submit text prompts", response_class=Response
-)
-async def submit_strings(batch: list[str], api_key: str = Depends(verify_api_key)) -> Response:  # noqa: B008
-    text_prompt_manager.submit(batch=batch)
-    return Response()
+@text_prompt_router.post(path="/submit", summary="Submit text prompts")
+async def submit_strings(request: TextPromptDTO, api_key: str = Depends(verify_api_key)) -> None:  # noqa: B008
+    text_prompt.submit(prompts=request.normalized_prompts)
 
 
-@text_prompt_router.post(path="/download", summary="Fetch a batch of text prompts")
-async def fetch_text_prompt_batch(
-    request: MetagraphData,
+@text_prompt_router.post(path="/batch", summary="Fetch batch of text prompts")
+async def get_text_prompt_batch(
+    request: MetagraphDataDTO,
     metagraph: Metagraph = Depends(get_metagraph_manager),  # noqa: B008
 ) -> list[str]:
     metagraph.verify_signature(request.hotkey, request.nonce, request.signature)
-    batch = text_prompt_manager.get_batch()
+    batch = text_prompt.get_batch(batch_size=config.text_prompt_batch_size)
     return batch
