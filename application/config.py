@@ -53,7 +53,3 @@ def read_config() -> bt.config:
 
 # todo Handle config in pydantic object and create bt.config from it.
 config = read_config()
-
-
-# application
-# default parameter for
