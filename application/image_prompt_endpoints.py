@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import HttpUrl
 
 from application.config import config
-from application.dependencies import get_metagraph_manager, verify_api_key
+from application.dependencies import get_metagraph, verify_api_key
 from application.metagraph import Metagraph
 from application.models import ImagePromptObtainDTO, ImagePromptPartial, ImagePromptSubmitDTO, MetagraphDataDTO
 from application.prompt.image_prompt import image_prompt
@@ -26,9 +26,9 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 async def obtain_image_prompt_batch(
     metagraph_data: MetagraphDataDTO,
     include_text: bool = Query(default=False, help="Include text normalized prompts."),
-    metagraph_manager: Metagraph = Depends(get_metagraph_manager),  # noqa: B008
+    metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
 ) -> ImagePromptObtainDTO:
-    metagraph_manager.verify_signature(metagraph_data.hotkey, metagraph_data.nonce, metagraph_data.signature)
+    metagraph.verify_signature(metagraph_data.hotkey, metagraph_data.nonce, metagraph_data.signature)
     batch = image_prompt.get_batch(batch_size=config.image_prompt_batch_size)
     return ImagePromptObtainDTO(
         prompts=[

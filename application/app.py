@@ -12,7 +12,7 @@ from starlette.status import HTTP_200_OK
 
 from application.config import config
 from application.cron import sync_metagraph_cron
-from application.dependencies import get_metagraph_manager, verify_api_key
+from application.dependencies import get_metagraph, verify_api_key
 from application.exceptions import (
     BaseException,
     InvalidApiKeyException,
@@ -64,9 +64,9 @@ async def submit_strings(batch: list[str], api_key: str = Depends(verify_api_key
 @app.get("/get")
 async def get_strings(
     request: MetagraphDataDTO,
-    metagraph_manager: Metagraph = Depends(get_metagraph_manager),  # noqa: B008
+    metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
 ) -> list[str]:
-    metagraph_manager.verify_signature(request.hotkey, request.nonce, request.signature)
+    metagraph.verify_signature(request.hotkey, request.nonce, request.signature)
     batch = text_prompt.get_batch(batch_size=config.text_prompt_batch_size)
     return batch
 

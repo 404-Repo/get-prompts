@@ -3,14 +3,14 @@ from fastapi.security import APIKeyHeader
 
 from application.config import config
 from application.exceptions import InvalidApiKeyException
-from application.utils.metagraph import Metagraph
+from application.metagraph import Metagraph
 
 
 metagraph = Metagraph(config=config)
 api_key_header = APIKeyHeader(name="X-Api-Key", auto_error=False)
 
 
-def get_metagraph_manager() -> Metagraph:
+def get_metagraph() -> Metagraph:
     return metagraph
 
 

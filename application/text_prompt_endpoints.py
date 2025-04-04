@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from application.config import config
-from application.dependencies import get_metagraph_manager, verify_api_key
+from application.dependencies import get_metagraph, verify_api_key
 from application.metagraph import Metagraph
 from application.models import MetagraphDataDTO, TextPromptDTO
 from application.prompt.text_prompt import text_prompt
@@ -18,7 +18,7 @@ async def submit_strings(request: TextPromptDTO, api_key: str = Depends(verify_a
 @text_prompt_router.post(path="/batch", summary="Fetch batch of text prompts")
 async def get_text_prompt_batch(
     request: MetagraphDataDTO,
-    metagraph: Metagraph = Depends(get_metagraph_manager),  # noqa: B008
+    metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
 ) -> list[str]:
     metagraph.verify_signature(request.hotkey, request.nonce, request.signature)
     batch = text_prompt.get_batch(batch_size=config.text_prompt_batch_size)
