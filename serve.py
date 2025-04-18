@@ -5,11 +5,6 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
-from fastapi import Depends, FastAPI
-from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
-from starlette.status import HTTP_200_OK
-
 from application.config import config
 from application.cron import sync_metagraph_cron
 from application.dependencies import get_metagraph, verify_api_key
@@ -24,6 +19,10 @@ from application.metagraph import Metagraph
 from application.models import MetagraphDataDTO
 from application.prompt.text_prompt import text_prompt
 from application.text_prompt_endpoints import text_prompt_router
+from fastapi import Depends, FastAPI
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
+from starlette.status import HTTP_200_OK
 
 
 _logger = logging.getLogger("uvicorn")
@@ -37,8 +36,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
 
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(image_prompt_router, prefix="/image_prompts")
-app.include_router(text_prompt_router, prefix="/text_prompts")
+app.include_router(image_prompt_router, prefix="/image-prompts")
+app.include_router(text_prompt_router, prefix="/text-prompts")
 
 
 @app.exception_handler(BaseException)
