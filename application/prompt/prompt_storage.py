@@ -92,10 +92,9 @@ class InMemoryImagePromptStorage(BasePromptStorage):
     def __init__(self, *, max_url_cnt: int, default_image_url_file_path: Path) -> None:
         self._urls: deque[str] = deque(maxlen=max_url_cnt)
         self._url_to_prompt: dict[str, str | None] = dict()
-        if not default_image_url_file_path.exists():
-            raise FileWithTextDataDoesntExist(f"File {default_image_url_file_path} does not exist.")
-        df = pd.read_csv(default_image_url_file_path)
-        self._url_to_normalized_prompt = df.set_index(df.columns[0])[df.columns[1]].to_dict()
+        if default_image_url_file_path.exists():
+            df = pd.read_csv(default_image_url_file_path)
+            self._url_to_normalized_prompt = df.set_index(df.columns[0])[df.columns[1]].to_dict()
 
     @property
     def url_cnt(self) -> int:
