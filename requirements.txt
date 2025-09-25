@@ -1,5 +1,5 @@
-bittensor==9.0.1
-bittensor-wallet==3.0.4
+bittensor==9.9.0
+bittensor-wallet==4.0.0
 fastapi==0.110.1
 pydantic==2.10.6
 starlette==0.37.2
@@ -9,3 +9,5 @@ pytest==8.3.5
 pytest-mock==3.14.0
 uvicorn==0.34.0
 httpx==0.28.1
+asyncpg==0.30.0
+pydantic-settings==2.10.1

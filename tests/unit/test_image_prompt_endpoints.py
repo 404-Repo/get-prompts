@@ -1,11 +1,11 @@
 from typing import cast
 
-from application.config import config
-from application.models import ImagePromptFull, ImagePromptObtainDTO, ImagePromptSubmitDTO, MetagraphDataDTO
+from settings import settings
+from api.models import ImagePrompt, ImagePromptObtainDTO, ImagePromptSubmitDTO, MetagraphDataDTO
 from faker import Faker
 from fastapi.testclient import TestClient
 from pydantic import HttpUrl
-from tests.routes import Routes, construct_url
+from routes import Routes, construct_url
 
 
 fake = Faker()
@@ -22,10 +22,10 @@ class TestImagePromptEndpoints:
         promts: dict[str, str] = {fake.url(): fake.sentence() for _ in range(20)}
 
         # Submit image prompts
-        req_prompts: list[ImagePromptFull] = []
+        req_prompts: list[ImagePrompt] = []
         for url, prompt in promts.items():
             req_prompts.append(
-                ImagePromptFull(
+                ImagePrompt(
                     url=cast(HttpUrl, url),
                     normalized_prompt=prompt,
                 )
@@ -55,7 +55,7 @@ class TestImagePromptEndpoints:
         response = test_client.post(construct_url(Routes.BATCH_IMAGE_PROMPTS), json=metagraph_data.model_dump())
         assert response.status_code == 200
         batch_prompts = ImagePromptObtainDTO.model_validate(response.json()).prompts
-        assert len(batch_prompts) == config.image_prompt_batch_size
+        assert len(batch_prompts) == settings.image_prompt_batch_size
         for prompt in batch_prompts:
             assert prompt.normalized_prompt is None
 
@@ -68,6 +68,6 @@ class TestImagePromptEndpoints:
         )
         assert response.status_code == 200
         batch_prompts = ImagePromptObtainDTO.model_validate(response.json()).prompts
-        assert len(batch_prompts) == config.image_prompt_batch_size
+        assert len(batch_prompts) == settings.image_prompt_batch_size
         for prompt in batch_prompts:
             assert prompt.normalized_prompt is not None

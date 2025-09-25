@@ -2,9 +2,9 @@ from pathlib import Path
 
 import faker
 import pytest
-from application.config import config
-from application.exceptions import FileWithTextDataDoesntExist, NotEnoughPromptsAvailable
-from application.prompt.prompt_storage import InMemoryImagePromptStorage
+from settings import settings
+from exceptions import FileWithTextDataDoesntExist, NotEnoughPromptsAvailable
+from prompt_storage.image_prompt_storage import InMemoryImagePromptStorage
 
 
 fake = faker.Faker()
@@ -53,12 +53,12 @@ class TestInMemoryImagePromptUrlStorage:
         batch_size = 5
         batch = storage.get_batch(batch_size=batch_size)
         assert len(batch) == batch_size
-        for url, prompt in batch.items():
+        for url, prompt in batch:
             assert url in storage._url_to_normalized_prompt
             assert prompt in storage._url_to_normalized_prompt[url]
 
     def _get_storage(
-        self, default_image_url_file: Path = Path(config.default_image_url_file)
+        self, default_image_url_file: Path = Path(settings.image_prompt_default_file)
     ) -> InMemoryImagePromptStorage:
         return InMemoryImagePromptStorage(
             max_url_cnt=TestInMemoryImagePromptUrlStorage._MAX_URL_CNT,

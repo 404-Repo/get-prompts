@@ -2,9 +2,9 @@ from pathlib import Path
 
 import faker
 import pytest
-from application.config import config
-from application.exceptions import FileWithTextDataDoesntExist, NotEnoughPromptsAvailable
-from application.prompt.prompt_storage import InMemoryTextPromptStorage
+from settings import settings
+from exceptions import FileWithTextDataDoesntExist, NotEnoughPromptsAvailable
+from prompt_storage.text_prompt_storage import InMemoryTextPromptStorage
 
 
 fake = faker.Faker()
@@ -15,7 +15,7 @@ class TestInMemoryTextPromptStorage:
 
     def test_text_promp_storage_initialized_with_default(self) -> None:
         storage = self._get_storage()
-        default_file_path = Path(config.default_text_prompt_file)
+        default_file_path = Path(settings.text_prompt_default_file)
         assert storage.prompt_cnt == 0
         with default_file_path.open(mode="r") as f:
             lines_cnt = len(set(f.readlines()))
@@ -55,7 +55,7 @@ class TestInMemoryTextPromptStorage:
             assert prompt in storage._all_prompts
 
     def _get_storage(
-        self, default_prompts_file: Path = Path(config.default_text_prompt_file)
+        self, default_prompts_file: Path = Path(settings.text_prompt_default_file)
     ) -> InMemoryTextPromptStorage:
         return InMemoryTextPromptStorage(
             max_prompt_cnt=TestInMemoryTextPromptStorage._MAX_PROMPT_CNT,

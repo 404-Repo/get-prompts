@@ -1,8 +1,8 @@
-from application.config import config
-from application.models import MetagraphDataDTO
+from settings import settings
+from api.models import MetagraphDataDTO
 from faker import Faker
 from fastapi.testclient import TestClient
-from tests.routes import Routes, construct_url
+from routes import Routes, construct_url
 
 
 fake = Faker()
@@ -33,4 +33,4 @@ class TestLegacyTextPromptEndpoints:
     ) -> None:
         response = test_client.post(construct_url(Routes.LEGACY_TEXT_PROMPTS_BATCH), json=metagraph_data.model_dump())
         assert response.status_code == 200
-        assert len(response.json()) == config.text_prompt_batch_size
+        assert len(response.json()) == settings.text_prompt_batch_size

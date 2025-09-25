@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from application.dependencies import metagraph
+from api.dependencies import metagraph
 
 
 _logger = logging.getLogger("uvicorn")

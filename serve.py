@@ -5,20 +5,20 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
-from application.config import config
-from application.cron import sync_metagraph_cron
-from application.dependencies import get_metagraph, verify_api_key
-from application.exceptions import (
+from metagraph.config import read_config
+from metagraph.sync_metagraph import sync_metagraph_cron
+from api.dependencies import get_metagraph, verify_api_key, get_text_prompt_storage
+from exceptions import (
     BaseException,
     InvalidApiKeyException,
     InvalidSignatureException,
     NotEnoughPromptsAvailable,
 )
-from application.image_prompt_endpoints import image_prompt_router
-from application.metagraph import Metagraph
-from application.models import MetagraphDataDTO
-from application.prompt.text_prompt import text_prompt
-from application.text_prompt_endpoints import text_prompt_router
+from api.image_prompt_endpoints import image_prompt_router
+from metagraph.metagraph import Metagraph
+from api.models import MetagraphDataDTO
+from prompt_storage.text_prompt_storage import TextPromptStorage
+from api.text_prompt_endpoints import text_prompt_router
 from fastapi import Depends, FastAPI
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -26,6 +26,7 @@ from starlette.status import HTTP_200_OK
 
 
 _logger = logging.getLogger("uvicorn")
+config = read_config()
 
 
 @asynccontextmanager
@@ -48,14 +49,17 @@ async def custom_exception_handler(request: Request, exc: BaseException) -> JSON
         return JSONResponse(status_code=403, content={"error": "Invalid API key", "message": str(exc)})
     elif isinstance(exc, NotEnoughPromptsAvailable):
         return JSONResponse(status_code=400, content={"error": "Not enough prompts available", "message": str(exc)})
-
     return JSONResponse(status_code=500, content={"error": "Unhandled Exception", "message": str(exc)})
 
 
 # todo: remove because deprecated
 @app.post("/submit", status_code=HTTP_200_OK, response_class=Response)
-async def submit_strings(batch: list[str], api_key: str = Depends(verify_api_key)) -> Response:  # noqa: B008
-    text_prompt.submit(prompts=batch)
+async def submit_strings(
+    batch: list[str], 
+    api_key: str = Depends(verify_api_key), 
+    text_prompt_storage: TextPromptStorage = Depends(get_text_prompt_storage)
+) -> Response:  # noqa: B008
+    text_prompt_storage.add(prompts=batch)
     return Response()
 
 
@@ -64,11 +68,13 @@ async def submit_strings(batch: list[str], api_key: str = Depends(verify_api_key
 async def get_strings(
     request: MetagraphDataDTO,
     metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
+    text_prompt_storage: TextPromptStorage = Depends(get_text_prompt_storage),
 ) -> list[str]:
     metagraph.verify_signature(request.hotkey, request.nonce, request.signature)
-    batch = text_prompt.get_batch(batch_size=config.text_prompt_batch_size)
+    batch = text_prompt_storage.get_batch()
     return batch
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=config.port)  # noqa: S104
+    from settings import settings
+    uvicorn.run(app, host="0.0.0.0", port=settings.port)  # noqa: S104

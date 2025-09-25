@@ -1,9 +1,9 @@
 import pytest
-from application.app import app
-from application.config import config
-from application.dependencies import get_metagraph, verify_api_key
-from application.metagraph import Metagraph
-from application.models import MetagraphDataDTO
+from api.app import app
+from metagraph.config import config
+from api.dependencies import get_metagraph, verify_api_key
+from metagraph.metagraph import Metagraph
+from api.models import MetagraphDataDTO
 from fastapi.testclient import TestClient
 
 
