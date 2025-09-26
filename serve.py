@@ -6,7 +6,7 @@ from typing import Any
 
 import uvicorn
 from metagraph.config import read_config
-from metagraph.sync_metagraph import sync_metagraph_cron
+from metagraph.sync_metagraph import sync_metagraph_cron, sync_metagraph
 from api.dependencies import get_metagraph, verify_api_key, get_text_prompt_storage
 from exceptions import (
     BaseException,
@@ -32,6 +32,9 @@ config = read_config()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
     _logger.info(config)
+    # Sync metagraph first time
+    await sync_metagraph()
+    # Start sync metagraph cron
     asyncio.create_task(sync_metagraph_cron())
     yield
 
@@ -73,6 +76,11 @@ async def get_strings(
     metagraph.verify_signature(request.hotkey, request.nonce, request.signature)
     batch = text_prompt_storage.get_batch()
     return batch
+
+
+@app.get("/health")
+async def health() -> str:
+    return "OK"
 
 
 if __name__ == "__main__":
