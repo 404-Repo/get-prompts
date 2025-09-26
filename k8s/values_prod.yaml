@@ -23,7 +23,7 @@ nodeSelector:
 # Environment variables
 env:
   - name: PORT
-    value: "3000"
+    value: "8093"
 
 
 # Database configuration - these will be populated from secrets
