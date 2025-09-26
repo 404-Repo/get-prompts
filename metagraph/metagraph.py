@@ -45,10 +45,6 @@ class Metagraph:
 
         keypair = Keypair(ss58_address=hotkey)
         message = f"{nonce}{hotkey}"
-        config = self.config
-        wallet = bt.wallet(config=config)
-        logger.info(f"message: {base64.b64encode(wallet.hotkey.sign(message)).decode(encoding="utf-8")}")
-        logger.info(f"signature: {wallet.hotkey.ss58_address}")
         try:
             result = bool(keypair.verify(message, base64.b64decode(signature.encode(encoding="utf-8"))))
         except Exception as e:
