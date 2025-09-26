@@ -12,10 +12,10 @@ terminationGracePeriodSeconds: 30
 
 dockerImage: europe-docker.pkg.dev/gen-456515/get-prompts
 containerName: get-prompts
-dockerTag: v3e9ac14
+dockerTag: v081a242
 
-command: ["/bin/bash"]
-args: ["-c", "bun run server"]
+command: ["pm2-runtime"]
+args: ["three-gen-get-prompts.config.js"]
 
 nodeSelector: 
   node: app-node-pool
@@ -23,7 +23,7 @@ nodeSelector:
 # Environment variables
 env:
   - name: PORT
-    value: "3000"
+    value: "8093"
 
 
 # Database configuration - these will be populated from secrets
@@ -48,13 +48,13 @@ resources:
 # Probes configuration
 httpInternal:
   port: 8093
-  healthCheckPath: /api/health
+  healthCheckPath: /health
 
 disableProbes: false
 #tcpProbePort: 8080
 
 httpProbe:
-  path: /api/health
+  path: /health
   port: 8093
 
 # metricsPath: /metrics
