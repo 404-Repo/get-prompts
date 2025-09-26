@@ -1,0 +1,75 @@
+name: Deploy to GKE with Helm
+
+on:
+  workflow_dispatch:
+
+env:
+  GKE_CLUSTER: gen404-prod
+  GKE_ZONE: europe-west3
+  HELM_REPO: https://github.com/404-Repo/404GEN-infra.git
+  HELM_CHART_PATH: python-server
+  RELEASE_NAME: get-prompts
+  NAMESPACE: gen404-prod
+
+jobs:
+  deploy:
+    name: Deploy to GKE with Helm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      packages: 'read'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Log in to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: gen-456515
+          workload_identity_provider: projects/369621634572/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-404-repo
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+      -
+        name: Checkout Helm repo
+        uses: actions/checkout@v4
+        with:
+          repository: 404-Repo/404GEN-infra
+          ref: main
+          token: ${{ secrets.ACTION_GITHUB_TOKEN }}
+          path: helm-repo
+      
+      - name: Set image tag
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "IMAGE_TAG=$GITHUB_REF_NAME" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=v${GITHUB_SHA::7}" >> $GITHUB_ENV
+          fi
+      
+      - name: Deploy with Helm
+        run: |
+          helm -n ${{ env.NAMESPACE }} upgrade --install ${{ env.RELEASE_NAME }} ./helm-repo/${{ env.HELM_CHART_PATH }} \
+            -f ./k8s/values_prod.yaml \
+            --set dockerTag=${{ env.IMAGE_TAG }} \
+            --wait --timeout 5m \
+            --atomic \
+            --debug
+      
+      - name: Verify deployment
+        run: |
+          kubectl get deployments -n ${{ env.NAMESPACE }}
+          echo "Deployment to production completed"
