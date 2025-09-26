@@ -19,7 +19,7 @@ RUN conda env create -f conda_env.yml
 SHELL ["conda", "run", "-n", "three-gen-get-prompts", "/bin/bash", "-c"]
 
 # Expose port
-EXPOSE 4001
+EXPOSE 8093
 
 # Run the application with PM2
 CMD ["pm2-runtime", "start", "three-gen-get-prompts.config.js"]
