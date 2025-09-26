@@ -12,10 +12,10 @@ terminationGracePeriodSeconds: 30
 
 dockerImage: europe-docker.pkg.dev/gen-456515/get-prompts
 containerName: get-prompts
-dockerTag: v3e9ac14
+dockerTag: v081a242
 
-command: ["/bin/bash"]
-args: ["-c", "bun run server"]
+command: ["pm2-runtime"]
+args: ["three-gen-get-prompts.config.js"]
 
 nodeSelector: 
   node: app-node-pool
