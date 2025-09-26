@@ -12,7 +12,7 @@ terminationGracePeriodSeconds: 30
 
 dockerImage: europe-docker.pkg.dev/gen-456515/get-prompts
 containerName: get-prompts
-dockerTag: v081a242
+dockerTag: vc0301cb
 
 command: ["pm2-runtime"]
 args: ["three-gen-get-prompts.config.js"]
