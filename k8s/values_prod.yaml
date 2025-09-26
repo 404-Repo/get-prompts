@@ -48,13 +48,13 @@ resources:
 # Probes configuration
 httpInternal:
   port: 8093
-  healthCheckPath: /api/health
+  healthCheckPath: /health
 
 disableProbes: false
 #tcpProbePort: 8080
 
 httpProbe:
-  path: /api/health
+  path: /health
   port: 8093
 
 # metricsPath: /metrics
