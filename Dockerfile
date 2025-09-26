@@ -13,7 +13,7 @@ WORKDIR /app
 COPY . .
 
 # Create conda environment
-RUN conda env create -f conda_env.yml
+RUN ./setup_env.sh
 
 # Make RUN commands use the new environment
 SHELL ["conda", "run", "-n", "three-gen-get-prompts", "/bin/bash", "-c"]
