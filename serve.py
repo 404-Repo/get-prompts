@@ -16,7 +16,6 @@ from exceptions import (
 )
 from api.image_prompt_endpoints import image_prompt_router
 from metagraph.metagraph import Metagraph
-from api.models import MetagraphData
 from prompt_storage import PromptStorage
 from api.text_prompt_endpoints import text_prompt_router
 from fastapi import Depends, FastAPI

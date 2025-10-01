@@ -3,8 +3,8 @@ from api.app import app
 from metagraph.config import config
 from api.dependencies import get_metagraph, verify_api_key
 from metagraph.metagraph import Metagraph
-from api.models import MetagraphData
 from fastapi.testclient import TestClient
+from api.models import GetPromptsRequest
 
 
 @pytest.fixture
@@ -20,9 +20,9 @@ def api_headers() -> dict[str, str]:
 
 
 @pytest.fixture
-def metagraph_data() -> MetagraphData:
+def metagraph_data() -> GetPromptsRequest:
     """Fixture to provide test metagraph data."""
-    return MetagraphData(hotkey="test_hotkey", nonce=12345, signature="test_signature")
+    return GetPromptsRequest(hotkey="test_hotkey", nonce=12345, signature="test_signature")
 
 
 class MockMetagraph(Metagraph):

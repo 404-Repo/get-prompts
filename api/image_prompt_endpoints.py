@@ -6,7 +6,7 @@ from pydantic import HttpUrl
 
 from api.dependencies import get_metagraph, verify_api_key
 from metagraph.metagraph import Metagraph   
-from api.models import GetPromptsResponse, SubmitPromptsRequest, MetagraphData
+from api.models import GetPromptsResponse, SubmitPromptsRequest, GetPromptsRequest
 from prompt_storage import PromptStorage
 from api.dependencies import get_image_prompt_storage
 
@@ -18,17 +18,16 @@ image_prompt_router = APIRouter(tags=["Image Prompts"])
 
 
 @image_prompt_router.post(
-    path="/batch",
-    summary="Get batch of image prompts with optional normalized text prompts.",
+    path="/get",
     description="Get batch of image prompts with optional normalized text prompts.",
     response_model=GetPromptsResponse,
 )
 async def get_image_prompt_batch(
-    metagraph_data: MetagraphData,
+    request_data: GetPromptsRequest,
     metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
     image_prompt_storage: PromptStorage = Depends(get_image_prompt_storage),
 ) -> GetPromptsResponse:
-    metagraph.verify_signature(metagraph_data.hotkey, metagraph_data.nonce, metagraph_data.signature)
+    metagraph.verify_signature(request_data.hotkey, request_data.nonce, request_data.signature)
     batch = image_prompt_storage.get_batch()
     return GetPromptsResponse(prompts=batch)
 

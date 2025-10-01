@@ -2,9 +2,7 @@ from pydantic import BaseModel, HttpUrl
 from prompt_storage import PromptStorage
 
 
-class MetagraphData(BaseModel):
-    """Model containing credentials for verifying validator's identity in bittensor network."""
-
+class GetPromptsRequest(BaseModel):
     hotkey: str
     nonce: int
     signature: str
