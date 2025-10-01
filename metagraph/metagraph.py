@@ -31,9 +31,7 @@ class Metagraph:
             raise InvalidSignatureException(err)
 
         if (
-            # todo To env
-            hotkey != "5E7eSeRr2aHzCV7SkY4a2Pi5NXHrU4anZz3phEQgn4HCen2B"  # subnet owner
-            and self.metagraph.S[uid].item() < self.config.min_stake_to_set_weights
+            self.metagraph.S[uid].item() < self.config.min_stake_to_set_weights
         ):
             err = f"{hotkey} is not a validator. Stake: {self.metagraph.S[uid].item()}"
             logger.error(err)

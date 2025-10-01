@@ -1,22 +1,18 @@
 from pydantic import BaseModel, HttpUrl
-from prompt_storage.image_prompt import ImagePrompt
+from prompt_storage import PromptStorage
 
 
-class MetagraphDataDTO(BaseModel):
-    """DTO object containing credentials for verifying validator's identity in bittensor network."""
+class MetagraphData(BaseModel):
+    """Model containing credentials for verifying validator's identity in bittensor network."""
 
     hotkey: str
     nonce: int
     signature: str
-    
-
-class ImagePromptSubmitDTO(BaseModel):
-    prompts: list[ImagePrompt]
 
 
-class ImagePromptObtainDTO(BaseModel):
-    prompts: list[ImagePrompt]
+class SubmitPromptsRequest(BaseModel):
+    prompts: list[str]
 
 
-class TextPromptDTO(BaseModel):
-    normalized_prompts: list[str]
+class GetPromptsResponse(BaseModel):
+    prompts: list[str]

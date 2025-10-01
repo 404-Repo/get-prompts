@@ -16,8 +16,8 @@ from exceptions import (
 )
 from api.image_prompt_endpoints import image_prompt_router
 from metagraph.metagraph import Metagraph
-from api.models import MetagraphDataDTO
-from prompt_storage.text_prompt_storage import TextPromptStorage
+from api.models import MetagraphData
+from prompt_storage import PromptStorage
 from api.text_prompt_endpoints import text_prompt_router
 from fastapi import Depends, FastAPI
 from starlette.requests import Request
@@ -53,29 +53,6 @@ async def custom_exception_handler(request: Request, exc: BaseException) -> JSON
     elif isinstance(exc, NotEnoughPromptsAvailable):
         return JSONResponse(status_code=400, content={"error": "Not enough prompts available", "message": str(exc)})
     return JSONResponse(status_code=500, content={"error": "Unhandled Exception", "message": str(exc)})
-
-
-# todo: remove because deprecated
-@app.post("/submit", status_code=HTTP_200_OK, response_class=Response)
-async def submit_strings(
-    batch: list[str], 
-    api_key: str = Depends(verify_api_key), 
-    text_prompt_storage: TextPromptStorage = Depends(get_text_prompt_storage)
-) -> Response:  # noqa: B008
-    text_prompt_storage.add(prompts=batch)
-    return Response()
-
-
-# todo: remove because deprecated
-@app.post("/get")
-async def get_strings(
-    request: MetagraphDataDTO,
-    metagraph: Metagraph = Depends(get_metagraph),  # noqa: B008
-    text_prompt_storage: TextPromptStorage = Depends(get_text_prompt_storage),
-) -> list[str]:
-    metagraph.verify_signature(request.hotkey, request.nonce, request.signature)
-    batch = text_prompt_storage.get_batch()
-    return batch
 
 
 @app.get("/health")

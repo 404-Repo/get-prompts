@@ -15,7 +15,5 @@ def read_config() -> bt.config:
         help="Minimal required stake to set weights.",
         default=10000,
     )
-    parser.add_argument("--wallet.name", type=str, help="Wallet name", default="validator")
-    parser.add_argument("--wallet.hotkey", type=str, help="Wallet hotkey", default="tensorplex")
 
     return bt.config(parser)

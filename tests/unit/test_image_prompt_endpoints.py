@@ -1,7 +1,7 @@
 from typing import cast
 
 from settings import settings
-from api.models import ImagePrompt, ImagePromptObtainDTO, ImagePromptSubmitDTO, MetagraphDataDTO
+from api.models import ImagePrompt, GetPromptsResponse, ImagePromptSubmit, MetagraphData
 from faker import Faker
 from fastapi.testclient import TestClient
 from pydantic import HttpUrl
@@ -16,7 +16,7 @@ class TestImagePromptEndpoints:
         self,
         test_client: TestClient,
         api_headers: dict[str, str],
-        metagraph_data: MetagraphDataDTO,
+        metagraph_data: MetagraphData,
         setup_dependencies: None,
     ) -> None:
         promts: dict[str, str] = {fake.url(): fake.sentence() for _ in range(20)}
@@ -30,7 +30,7 @@ class TestImagePromptEndpoints:
                     normalized_prompt=prompt,
                 )
             )
-        request_data = ImagePromptSubmitDTO(prompts=req_prompts)
+        request_data = ImagePromptSubmit(prompts=req_prompts)
         json_data = request_data.model_dump()
         for prompt in json_data["prompts"]:
             prompt["url"] = str(prompt["url"])  # type: ignore
@@ -43,31 +43,31 @@ class TestImagePromptEndpoints:
             json=metagraph_data.model_dump(),
         )
         assert response.status_code == 200
-        batch_prompts = ImagePromptObtainDTO.model_validate(response.json()).prompts
+        batch_prompts = GetPromptsResponse.model_validate(response.json()).prompts
         batch_prompts_dict = {str(prompt.url): prompt.normalized_prompt for prompt in batch_prompts}
         for url, prompt in promts.items():
             assert url in batch_prompts_dict
             assert prompt in cast(str, batch_prompts_dict[url])
 
     def test_get_default_image_prompts_batch_without_text_success(
-        self, test_client: TestClient, metagraph_data: MetagraphDataDTO, setup_dependencies: None
+        self, test_client: TestClient, metagraph_data: MetagraphData, setup_dependencies: None
     ) -> None:
         response = test_client.post(construct_url(Routes.BATCH_IMAGE_PROMPTS), json=metagraph_data.model_dump())
         assert response.status_code == 200
-        batch_prompts = ImagePromptObtainDTO.model_validate(response.json()).prompts
+        batch_prompts = GetPromptsResponse.model_validate(response.json()).prompts
         assert len(batch_prompts) == settings.image_prompt_batch_size
         for prompt in batch_prompts:
             assert prompt.normalized_prompt is None
 
     def test_get_default_image_prompts_batch_with_text_success(
-        self, test_client: TestClient, metagraph_data: MetagraphDataDTO, setup_dependencies: None
+        self, test_client: TestClient, metagraph_data: MetagraphData, setup_dependencies: None
     ) -> None:
         response = test_client.post(
             construct_url(Routes.BATCH_IMAGE_PROMPTS, {"include_normalized_prompt": "true"}),
             json=metagraph_data.model_dump(),
         )
         assert response.status_code == 200
-        batch_prompts = ImagePromptObtainDTO.model_validate(response.json()).prompts
+        batch_prompts = GetPromptsResponse.model_validate(response.json()).prompts
         assert len(batch_prompts) == settings.image_prompt_batch_size
         for prompt in batch_prompts:
             assert prompt.normalized_prompt is not None
