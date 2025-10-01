@@ -17,4 +17,8 @@ __pycache__/
 # Report folders
 .reports
 
-
+Miniconda3*
+package.json
+pnpm*
+receiver.config.js
+node_modules

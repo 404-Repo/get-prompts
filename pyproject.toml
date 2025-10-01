@@ -6,9 +6,15 @@ authors = ["Maxim Bladyko <bladyko@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = ">=3.12,<3.13"
 bittensor = "9.0.1"
 python-dotenv = "1.0.1"
+faker = "^37.1.0"
+pytest = "^8.3.5"
+pytest-mock = "^3.14.0"
+pandas = "^2.2.3"
+httpx = "^0.28.1"
+pre-commit = "^4.2.0"
 
 [tool.poetry.group.dev.dependencies]
 poetry = { version = "2.1.1" }
@@ -17,14 +23,14 @@ ruff = "0.9.7"
 bandit = "1.8.3"
 black = "25.1.0"
 mypy = "1.15.0"
-types-requests = "2.32.0.*"
+pre-commit = "^4.0.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-target-version = ['py311']
+target-version = ['py312']
 line-length = 120
 include = '\.pyi?$'
 exclude = '''
@@ -38,7 +44,7 @@ exclude = '''
 '''
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 cache-dir = ".reports/ruff_cache"
 line-length = 120
 src = ["sources"]
@@ -46,6 +52,7 @@ namespace-packages = ["sources"]
 fix = true
 output-format = "full"
 include = ["*.py"]
+ignore = ["S311"]
 
 [tool.ruff.lint]
 select = [
@@ -59,10 +66,10 @@ select = [
     "ASYNC", # flake8-async
     "PTH", # flake8-use-pathlib
 ]
+ignore = ["S101"]
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
-
 # Exclude directories
 exclude = [
     ".*",
@@ -79,7 +86,7 @@ combine-as-imports = true
 lines-after-imports = 2
 
 [tool.bandit]
-skips = ["B104"]
+skips = ["B104", "B311", "B101"]
 exclude_dirs = [
     "./.*/**",
     "./tests/**",
@@ -106,9 +113,6 @@ module = [
     # place modules to skip here
 ]
 ignore_errors = true
-
-[tool.poe]
-poetry_command = ""
 
 [tool.poe.tasks.run-check]
 help = "Run tests and try fix format"

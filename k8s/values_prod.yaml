@@ -1,0 +1,68 @@
+# Values for validator-metrics-push Helm chart
+# This is based on the docker-compose.yml and application configuration
+
+GCPEnv: prod
+# Replica configuration
+replicas: 1
+# podDisruptionBudget:
+#   minUnavailable: 25%
+
+terminationGracePeriodSeconds: 30
+  
+
+dockerImage: europe-docker.pkg.dev/gen-456515/get-prompts
+containerName: get-prompts
+dockerTag: vc0301cb
+
+command: ["pm2-runtime"]
+args: ["three-gen-get-prompts.config.js"]
+
+nodeSelector: 
+  node: app-node-pool
+
+# Environment variables
+env:
+  - name: PORT
+    value: "8093"
+
+
+# Database configuration - these will be populated from secrets
+envFromGCPSecret:
+  - name: API_KEY
+    secretSuffix: gen404-sql-db-get-prompts
+    secretKey: API_KEY
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    memory: 1Gi
+
+# autoscaling:
+#   minReplicas: 2
+#   maxReplicas: 10
+#   targetCPUUtilizationPercentage: 70
+#   targetMemoryUtilizationPercentage: 80
+
+# Probes configuration
+httpInternal:
+  port: 8093
+  healthCheckPath: /health
+
+disableProbes: false
+#tcpProbePort: 8080
+
+httpProbe:
+  path: /health
+  port: 8093
+
+# metricsPath: /metrics
+# metricsPort: 8080
+
+# Deployment strategy
+deploymentStrategy:
+rollingUpdate:
+  maxSurge: 25%
+  maxUnavailable: 25%
+type: RollingUpdate

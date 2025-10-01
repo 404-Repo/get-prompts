@@ -1,10 +1,10 @@
-name: three-gen-prompt-receiver
+name: three-gen-get-prompts
 channels:
   - defaults
   - conda-forge
 
 dependencies:
-  - python=3.11
+  - python=3.12
   - pip
   - pnpm
   - pip:
